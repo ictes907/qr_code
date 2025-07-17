@@ -832,6 +832,10 @@ def student_login():
 
     return render_template("student_login.html")
 
+@app.route('/')
+def home():
+    return render_template('student_login.html')
+
 @app.route("/student_dashboard")
 def student_dashboard():
     db = get_db_connection()
