@@ -10,6 +10,11 @@ from flask import render_template, request
 from flask import request, jsonify
 import urllib.parse
 
+from flask import Flask, session
+app = Flask(__name__)
+app.secret_key = 'your-secret-key'
+app.run()
+print("✅ التطبيق بدأ التشغيل بنجاح على Render")
 
   
 def generate_qr(course_id, course_name, student_id="S1001"):
@@ -813,8 +818,11 @@ def logout():
 @app.route("/student_login", methods=["GET", "POST"])
 def student_login():
     if request.method == "POST":
-        full_name = request.form["full_name"]
-        university_id = request.form["university_id"]
+        full_name = request.form.get("full_name", "").strip()
+        university_id = request.form.get("university_id", "").strip()
+
+        if not full_name or not university_id:
+            return render_template("student_login.html", error="يرجى إدخال جميع الحقول")
 
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
@@ -832,24 +840,42 @@ def student_login():
 
     return render_template("student_login.html")
 
-@app.route('/')
-def home():
-    return render_template('student_login.html')
+
+
+
 
 @app.route("/student_dashboard")
 def student_dashboard():
+    # التحقق من أن الطالب مسجل دخول
+    if "student_id" not in session:
+        return redirect("/student_login")
+
+    # الاتصال بقاعدة البيانات
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
+
+    # جلب السنوات والأقسام والفصول
     cursor.execute("SELECT * FROM years")
     years = cursor.fetchall()
+
     cursor.execute("SELECT * FROM departments")
     departments = cursor.fetchall()
+
     cursor.execute("SELECT * FROM semesters")
     semesters = cursor.fetchall()
+
     cursor.close()
     db.close()
 
-    return render_template("student_dashboard.html", years=years, departments=departments, semesters=semesters)
+    # عرض صفحة الطالب مع البيانات
+    return render_template(
+        "student_dashboard.html",
+        student_name=session["student_name"],
+        years=years,
+        departments=departments,
+        semesters=semesters
+    )
+
 
 
 @app.route("/student_courses")
@@ -1000,6 +1026,6 @@ def scan_qr():
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
 
-    app.run(host='0.0.0.0', port=3000)
+    app.run(host='0.0.0.0', port=10000)
 
 
