@@ -1,0 +1,148 @@
+{% set error = error if error is defined else False %}
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل دخول المدرسين</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: 'Tahoma', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    header img {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+    }
+
+    .login-container {
+      width: 320px;
+      margin: 130px auto;
+      background-color: #fff;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+      padding: 30px 25px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input[type="password"],
+    .password-wrapper input[type="text"] {
+      padding-right: 40px;
+    }
+
+    .toggle-eye {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 16px;
+      color: #007bff;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      border: none;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .signup-link {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .signup-link a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .shake {
+      animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- شعار الجامعة -->
+  <header>
+    <img src="/static/university_logo.png" alt="شعار الجامعة">
+  </header>
+
+  <!-- واجهة تسجيل الدخول -->
+  <div class="login-container">
+    <h2>تسجيل دخول المدرسين</h2>
+    <form action="/login" method="post">
+
+
+        <input type="text" name="university_id" placeholder="الرقم الجامعي" value="">
+      <div class="password-wrapper">
+        <input type="password" name="password" placeholder="كلمة المرور" id="password">
+      
+        <span class="toggle-eye" onclick="togglePassword()">👁️</span>
+      </div>
+         
+         
+
+         <button type="submit"><p> دخول<a href="/dashboard"> </a></p></button>
+         
+    </form>
+
+    <div class="signup-link">
+      <p>ليس لديك حساب؟ <a href="/register">إضافة حساب جديد</a></p>
+     
+
+    </div>
+  </div>
+
+  <!-- عرض/إخفاء كلمة المرور -->
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+    }
+  </script>
+</body>
+</html>
+

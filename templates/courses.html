@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+  <meta charset="UTF-8">
+  <title>جدول المواد</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background-color: #f0f2f5;
+      padding: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+  </style>
+<head>
+    <meta charset="UTF-8">
+    <title>جدول المواد</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+       <a href="/export_courses" class="export-btn" title="تصدير إلى Excel">🟩📄</a>
+       <form method="get" action="/courses" style="margin-bottom: 20px;">
+        <input type="text" name="search_name" placeholder="ابحث باسم المادة">
+        <button type="submit">🔍</button>
+      </form>
+      
+<body>
+    <h1>جدول المواد</h1>
+    <table border="1">
+        <tr>
+            <th>اسم المادة</th>
+            <th>القسم</th>
+            <th>الفصل الدراسي</th> <!-- ✅ تمت الإضافة -->
+            <th>السنة</th>
+            <th>QR Code</th>
+            <th>إجراءات</th>
+        </tr>
+        {% for course in courses %}
+        <td>
+            <img src="/static/qrcodes/{{ course['qr_code'] }}" width="50">
+        </td>
+          
+        <tr>
+            <td>{{ course['course_name'] }}</td>
+            <td>{{ course['department_name'] }}</td>
+            <td>{{ course['semester_name'] }}</td>
+            <td>{{ course['year_name'] }}</td>
+            <td><img src="/static/qrcodes/{{ course['qr_code'] }}" width="50"></td>
+
+            <!-- ✅ تم تضمين الفصل الدراسي -->
+           
+            <td>
+                <form action="/delete_course/{{ course['id'] }}" method="get">
+                    <button type="submit">🗑 حذف</button>
+                </form>
+                
+                </form>
+                <form action="/edit_course/{{ course['id'] }}" method="post">
+                    <input type="text" name="course_name" value="{{ course['course_name'] }}" required>
+                    <input type="number" name="department_id" value="{{ course['department_id'] }}" required>
+                    <input type="number" name="year_id" value="{{ course['year_id'] }}" required>
+                    <input type="number" name="semester_id" value="{{ course['semester_id'] }}" required>
+                    <button type="submit">✏ تعديل</button>
+                </form>
+                
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>إضافة مادة جديدة</h2>
+    <form action="/add_course" method="post">
+        <input type="text" name="course_name" placeholder="اسم المادة" required>
+        <input type="number" name="department_id" placeholder="ID القسم" required>
+        <input type="number" name="year_id" placeholder="ID السنة" required>
+        <input type="number" name="semester_id" placeholder="ID الفصل الدراسي" required> <!-- ✅ تأكد من هذا الحقل -->
+        <button type="submit">➕ إضافة</button>
+    </form>
+    
+    </form>
+</body>
+</html>

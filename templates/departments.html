@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+  <meta charset="UTF-8">
+  <title>جدول الأقسام</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background-color: #f0f2f5;
+      padding: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+  </style>
+<head>
+    <meta charset="UTF-8">
+    <title>جدول الأقسام</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>جدول الأقسام</h1>
+    <table border="1">
+        <tr>
+            <th>id</th>
+            <th>السنة</th>
+            <th>اسم القسم</th>
+            <th>إجراءات</th>
+        </tr>
+        {% for department in departments %}
+        <tr>
+            
+            <td>{{ department['id'] }}</td>
+            
+            <td>{{ department['year_id'] }}</td>
+            <td>{{ department['department_name'] }}</td>
+
+            <td>
+                <form action="/delete_department/{{ department['id'] }}" method="get">
+                    <button type="submit">حذف</button>
+                  
+                  
+                </form>
+                <form action="/edit_department/{{ department['id'] }}" method="post">
+                    <input type="text" name="department_name" value="{{ department['department_name'] }}" required>
+                    <input type="number" name="year_id" value="{{ department['year_id'] }}" required>
+                    <button type="submit">تعديل</button>
+                  </form>
+                  
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+                  <h2>إضافة قسم جديد</h2>
+                          <form action="/add_department" method="post">
+
+                  
+   
+                     <input type="text" name="department_name" placeholder="اسم القسم" required>
+                     <input type="number" name="year_id" placeholder="السنة" required>
+                     <button type="submit">➕ إضافة</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>اختبار QR</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+</head>
+<body>
+  <h3>اختبار QR من صورة</h3>
+  <input type="file" id="fileInput" />
+  <canvas id="canvas" hidden></canvas>
+
+  <script>
+    const input = document.getElementById("fileInput");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    input.addEventListener("change", event => {
+      const file = event.target.files[0];
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+          console.log("QR:", code.data);
+          window.location.href = code.data;
+        } else {
+          alert("❌ لم يتم العثور على كود QR");
+        }
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  </script>
+</body>
+</html>

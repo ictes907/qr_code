@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>المواد المتاحة</title>
+</head>
+<body>
+  <h2>المواد المتاحة:</h2>
+  {% if courses %}
+    <ul>
+      {% for course in courses %}
+        <li>
+          {{ course.course_name }} —
+          <a href="/scan_qr?course_id={{ course.id }}">تسجيل الحضور</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>لا توجد مواد مطابقة للخيارات المحددة.</p>
+  {% endif %}
+</body>
+</html>

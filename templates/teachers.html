@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>جدول المدرّسين</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background-color: #f0f2f5;
+      padding: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+  <a href="/export_teachers" class="export-btn" title="تصدير إلى Excel">🟩📄</a>
+  <form method="get" action="/teachers">
+    <input type="text" name="search_id" placeholder="ابحث بالرقم الجامعي للمدرّس">
+    <button type="submit">🔍 </button>
+  </form>
+  
+
+<body>
+   
+  <h1>جدول المدرّسين</h1>
+  <table>
+    <tr>
+      <th>الاسم الثلاثي</th>
+      <th>الرقم الجامعي</th>
+      <th>المؤهل العلمي</th>
+      <th>القسم</th>
+      <th>السنين التي يدرّسها</th>
+      <th>السنة </th>
+    </tr>
+    {% for teacher in teachers %}
+    <tr>
+      <td>{{ teacher.full_name }}</td>
+      <td>{{ teacher.university_id }}</td>
+      <td>{{ teacher.education_level }}</td>
+      <td>{{ teacher.department_name or 'غير مخصص' }}</td>
+      <td>{{ teacher.year_name or '—' }}</td>
+
+    </tr>
+    {% endfor %}
+    
+
+
+   
+  </table>
+</body>
+</html>

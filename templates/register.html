@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إنشاء حساب مدرس</title>
+  <style>
+    input, select {
+      padding: 10px;
+      margin: 8px 0;
+      width: 100%;
+    }
+    .container {
+      width: 400px;
+      margin: 40px auto;
+      background: #f8f8f8;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>اضافة حساب جديد</h2>
+    <form action="/register" method="post">
+      <input type="text" name="full_name" placeholder="الاسم الثلاثي" required>
+      <input type="text" name="university_id" placeholder="الرقم الجامعي" required>
+      <input type="text" name="education_level" placeholder="المؤهل العلمي" required>
+      <input type="password" name="password" placeholder="كلمة المرور" required>
+
+      <select name="department_id" required>
+        <option disabled selected>اختر القسم</option>
+        {% for dept in departments %}
+        <option value="{{ dept.id }}">{{ dept.department_name }}</option>
+        {% endfor %}
+      </select>
+
+      <label>اختر السنوات التي تدرّسها:</label>
+      {% for year in years %}
+        <input type="checkbox" name="year_ids" value="{{ year.id }}"> {{ year.year_name }}<br>
+      {% endfor %}
+
+      <button type="submit">تسجيل الحساب</button>
+    </form>
+  </div>
+</body>
+</html>
