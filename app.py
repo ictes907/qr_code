@@ -16,6 +16,10 @@ app.secret_key = 'your-secret-key'
 app.run()
 print("✅ التطبيق بدأ التشغيل بنجاح على Render")
 
+
+
+
+
   
 def generate_qr(course_id, course_name, student_id="S1001"):
     # تأمين رابط Cloudflare
@@ -83,6 +87,11 @@ def generate_missing_qr():
 if __name__ == "__main__":
     generate_missing_qr()
 
+import psycopg2
+
+
+
+
 
 app = Flask(__name__)
 app.secret_key = "mysecret"  # لازم يكون موجود لتفعيل الجلسة
@@ -90,14 +99,27 @@ app.secret_key = "mysecret"  # لازم يكون موجود لتفعيل الج�
 
 # ✅ الاتصال بقاعدة البيانات
 import os
+import psycopg2
+import psycopg2
 
 def get_db_connection():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME")
+    return psycopg2.connect(
+        dbname="neondb",
+        user="neondb_owner",
+        password="npg_VU8tyFNlW0IK",  # ← استبدلها بكلمة السر الحقيقية
+        host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
+        port="5432",
+        sslmode="require"
     )
+
+if __name__ == "__main__":
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT 1;")
+    print("نتيجة الاتصال:", cur.fetchone())
+    cur.close()
+    conn.close()
+   
 
 # ✅ إدارة الطلاب
 @app.route("/students")
@@ -1011,23 +1033,55 @@ def record_attendance():
 
 
     
+from flask import Flask, request
+import os
+import psycopg2  # ← تأكد إنها موجودة لو بتستخدم Neon
 
+app = Flask(__name__)
 
+from flask import Flask, request
+import psycopg2
 
+app = Flask(__name__)
+
+def get_db_connection():
+    return psycopg2.connect(
+        dbname="neondb",
+        user="neondb_owner",
+        password="npg_VU8tyFNlW0IK",
+        host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
+        port="5432",
+        sslmode="require"
+    )
 
 @app.route("/scan_qr")
 def scan_qr():
+
+    student_id = request.args.get("student_id")
     course_id = request.args.get("course_id")
-    return render_template("scan_qr.html", course_id=course_id)
+
+    if not student_id or not course_id:
+        return "❌ بيانات ناقصة"
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
+        VALUES (%s, %s, CURRENT_DATE, CURRENT_TIME, 'حاضر');
+    """, (student_id, course_id))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return f"✔️ تم تسجيل حضور الطالب {student_id} للمادة {course_id}"
 
 
-
-# ✅ تشغيل التطبيق
-import os
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))  # رقم المنفذ يجي من Render
-    app.run(host='0.0.0.0', port=port)         # لازم يكون 0.0.0.0 وليس localhost
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+
 
 
 
