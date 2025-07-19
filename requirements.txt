@@ -4,4 +4,5 @@ psycopg2
 qrcode
 pandas
 openpyxl
+mysql-connector-python
 
