@@ -1,6 +1,8 @@
 import qrcode
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, urllib.parse
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+import urllib.parse
+
 
 import psycopg2
 
