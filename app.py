@@ -91,20 +91,20 @@ def generate_missing_qr():
     db.close()
     print("🎯 اكتملت العملية.")
 
-# شغّل السكربت
-if __name__ == "__main__":
-    generate_missing_qr()
-
+from flask import Flask, render_template
 import psycopg2
 
-
-
 app = Flask(__name__)
-app.secret_key = "mysecret"  # لازم يكون موجود لتفعيل الجلسة
+app.secret_key = "mysecret"
 
 @app.route("/")
 def home():
     return render_template("student_login.html")
+
+
+# شغّل توليد QR بعد تعريف كل شي
+if __name__ == "__main__":
+    generate_missing_qr()
 
 
 # ✅ الاتصال بقاعدة البيانات
