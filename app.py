@@ -849,7 +849,9 @@ def logout():
 
 
 @app.route("/student_login", methods=["GET", "POST"])
-def student_login():
+def student_login_page():
+    
+
     if request.method == "POST":
         full_name = request.form.get("full_name", "").strip()
         university_id = request.form.get("university_id", "").strip()
