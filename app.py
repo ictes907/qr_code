@@ -127,8 +127,8 @@ if __name__ == "__main__":
     cur.close()
     conn.close()
    
-@app.route("/student_login")
-def student_login():
+@app.route("/")
+def home():
     return render_template("student_login.html")
 
 
