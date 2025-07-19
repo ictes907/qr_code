@@ -115,7 +115,7 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password = os.environ.get("DATABASE_PASSWORD")  # قراءة كلمة السر من البيئة
+        password = os.environ.get("DATABASE_PASSWORD") , # قراءة كلمة السر من البيئة
 
         host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
@@ -1087,10 +1087,9 @@ def scan_qr():
 
 if __name__ == '__main__':
     import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+   
+    ...
 
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
 
 
 
