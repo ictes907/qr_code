@@ -115,7 +115,8 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password=os.environ.get("DATABASE_PASSWORD"),,  # ← استبدلها بكلمة السر الحقيقية
+        password=os.environ.get("DATABASE_PASSWORD")
+
         host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
