@@ -110,18 +110,20 @@ def home():
 # ✅ الاتصال بقاعدة البيانات
 import os
 import psycopg2
-import psycopg2
+
 
 def get_db_connection():
     return psycopg2.connect(
+
         dbname="neondb",
         user="neondb_owner",
-        password = os.environ.get("DATABASE_PASSWORD") , # قراءة كلمة السر من البيئة
-
+        password="npg_VU8tyFNlW0IK",    
         host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
     )
+
+
 
 if __name__ == "__main__":
     conn = get_db_connection()
