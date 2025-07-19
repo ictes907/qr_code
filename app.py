@@ -106,6 +106,7 @@ app.secret_key = "mysecret"  # لازم يكون موجود لتفعيل الج�
 def home():
     return render_template("student_login.html")
 
+
 # ✅ الاتصال بقاعدة البيانات
 import os
 import psycopg2
