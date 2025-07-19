@@ -102,6 +102,9 @@ import psycopg2
 app = Flask(__name__)
 app.secret_key = "mysecret"  # لازم يكون موجود لتفعيل الجلسة
 
+@app.route("/")
+def home():
+    return render_template("student_login.html")
 
 # ✅ الاتصال بقاعدة البيانات
 import os
@@ -127,9 +130,7 @@ if __name__ == "__main__":
     cur.close()
     conn.close()
    
-@app.route("/")
-def home():
-    return render_template("student_login.html")
+
 
 
 # ✅ إدارة الطلاب
