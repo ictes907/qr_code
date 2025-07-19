@@ -99,8 +99,6 @@ import psycopg2
 
 
 
-
-
 app = Flask(__name__)
 app.secret_key = "mysecret"  # لازم يكون موجود لتفعيل الجلسة
 
@@ -129,6 +127,10 @@ if __name__ == "__main__":
     cur.close()
     conn.close()
    
+@app.route("/student_login")
+def student_login():
+    return render_template("student_login.html")
+
 
 # ✅ إدارة الطلاب
 @app.route("/students")
