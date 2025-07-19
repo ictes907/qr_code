@@ -1,15 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+import qrcode
+import os
+from flask import Flask, render_template, request, redirect, url_for, session, render_template, jsonify, urllib.parse
 
 import psycopg2
 
-import qrcode
-import os
-from flask import render_template
-
-
-from flask import render_template, request
-from flask import request, jsonify
-import urllib.parse
 
 from flask import Flask, session
 app = Flask(__name__)
@@ -59,13 +53,25 @@ from io import BytesIO
 
 def generate_missing_qr():
     # 1. الاتصال بقاعدة البيانات
-    db = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="root",
-        database="attendance_system"
-    )
-    cursor = db.cursor(dictionary=True)
+  def generate_missing_qr():
+    db = get_db_connection()
+    cursor = db.cursor()
+    
+    cursor.execute("SELECT id, course_name FROM courses WHERE qr_code IS NULL OR qr_code = ''")
+    courses = cursor.fetchall()
+
+    print(f"🔍 عُثر على {len(courses)} مادة بدون QR")
+
+    for course in courses:
+        qr_filename = generate_qr(course[0], course[1])
+        cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_filename, course[0]))
+        print(f"✅ توليد QR للمادة: {course[1]} → {qr_filename}")
+
+    db.commit()
+    cursor.close()
+    db.close()
+    print("🎯 اكتملت العملية")
+    rsor = db.cursor(dictionary=True)
 
     # 2. اختيار المواد يلي ما إلها QR
     cursor.execute("SELECT id, course_name FROM courses WHERE qr_code IS NULL OR qr_code = ''")
@@ -107,7 +113,7 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password="npg_VU8tyFNlW0IK",  # ← استبدلها بكلمة السر الحقيقية
+        password=os.environ.get("DATABASE_PASSWORD"),,  # ← استبدلها بكلمة السر الحقيقية
         host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
@@ -1038,10 +1044,8 @@ from flask import Flask, request
 import os
 import psycopg2  # ← تأكد إنها موجودة لو بتستخدم Neon
 
-app = Flask(__name__)
 
-from flask import Flask, request
-import psycopg2
+
 
 app = Flask(__name__)
 
