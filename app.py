@@ -486,9 +486,7 @@ def export_attendance():
 def logout():
     session.clear()
     return redirect("/login")
-@app.route("/")
-def home():
-    return render_template("student_login.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
