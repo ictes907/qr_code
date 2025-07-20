@@ -101,6 +101,9 @@ app.secret_key = "mysecret"
 def home():
     return render_template("student_login.html")
 
+@app.route("/debug")
+def debug():
+    return "<h2>🐞 صفحة فحص الراوت /debug تعمل بنجاح!</h2>"
 
 
 
