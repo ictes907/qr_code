@@ -15,11 +15,6 @@ print("✅ التطبيق بدأ التشغيل بنجاح على Render")
 
 
 
-@app.route("/")
-def home():
-    return render_template("student_login.html")
-
-
 
   
 def generate_qr(course_id, course_name, student_id="S1001"):
@@ -101,6 +96,18 @@ import psycopg2
 
 app = Flask(__name__)
 app.secret_key = "mysecret"
+
+
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "<h1>✅ الراوت الرئيسي يعمل بدون قالب!</h1>"
+
+
 
 
 
