@@ -97,9 +97,10 @@ import psycopg2
 app = Flask(__name__)
 app.secret_key = "mysecret"
 
-@app.route("/")
-def home():
-    return "<h1>✅ الصفحة الرئيسية تعمل!</h1>"
+@app.route("/test")
+def test_page():
+    return "<h2>🚀 هذه صفحة اختبار ثانوية!</h2>"
+
 
 
 
