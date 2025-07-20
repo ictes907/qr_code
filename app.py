@@ -97,11 +97,9 @@ import psycopg2
 app = Flask(__name__)
 app.secret_key = "mysecret"
 
-@app.route("/test")
-def test_page():
-    return "<h2>🚀 هذه صفحة اختبار ثانوية!</h2>"
-
-
+@app.route("/")
+def home():
+    return render_template("student_login.html")
 
 
 
