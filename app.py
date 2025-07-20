@@ -97,13 +97,13 @@ import psycopg2
 app = Flask(__name__)
 app.secret_key = "mysecret"
 
-@app.route("/")
-def home():
-    return render_template("student_login.html")
-
 @app.route("/debug")
 def debug():
-    return "<h2>🐞 صفحة فحص الراوت /debug تعمل بنجاح!</h2>"
+    return "<h2>🐞 راوت /debug يعمل بنجاح!</h2>"
+
+
+
+
 
 
 
