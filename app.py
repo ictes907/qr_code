@@ -104,6 +104,7 @@ def home():
 
 
 
+
 # شغّل توليد QR بعد تعريف كل شي
 if __name__ == "__main__":
     generate_missing_qr()
