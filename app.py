@@ -15,6 +15,11 @@ print("✅ التطبيق بدأ التشغيل بنجاح على Render")
 
 
 
+@app.route("/")
+def home():
+    return render_template("student_login.html")
+
+
 
   
 def generate_qr(course_id, course_name, student_id="S1001"):
@@ -96,13 +101,6 @@ import psycopg2
 
 app = Flask(__name__)
 app.secret_key = "mysecret"
-
-@app.route("/debug")
-def debug():
-    return "<h2>🐞 راوت /debug يعمل بنجاح!</h2>"
-
-
-
 
 
 
