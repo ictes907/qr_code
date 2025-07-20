@@ -99,7 +99,9 @@ app.secret_key = "mysecret"
 
 @app.route("/")
 def home():
+    print("✅ تم الدخول إلى الراوت الرئيسي")
     return render_template("student_login.html")
+
 
 
 
