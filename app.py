@@ -102,6 +102,7 @@ def home():
     return render_template("student_login.html")
 
 
+
 # شغّل توليد QR بعد تعريف كل شي
 if __name__ == "__main__":
     generate_missing_qr()
