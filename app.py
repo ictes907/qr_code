@@ -18,6 +18,25 @@ def get_db_connection():
         port="5432",
         sslmode="require"
     )
+@app.route("/register_attendance")
+def register_attendance():
+    course_id = request.args.get("course_id")
+    student_id = session.get("student_id")
+
+    if not student_id:
+        return redirect("/")
+
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    cursor.execute("INSERT INTO attendance (student_id, course_id) VALUES (%s, %s)",
+                   (student_id, course_id))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return "<h3>✅ تم تسجيل حضورك بنجاح للمادة رقم {}!</h3>".format(course_id)
 
 @app.route("/show_password")
 def print_password():
