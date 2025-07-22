@@ -514,7 +514,7 @@ def export_attendance():
     return send_file(output, as_attachment=True,
                      download_name="attendance.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                     @app.route("/debug_db")
+@app.route("/debug_db")
 def debug_db():
     try:
         db = get_db_connection()
