@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل دخول الطالب</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <div style="text-align:center; margin-top: 40px;">
+    <img src="/static/university_logo.png" alt="شعار الجامعة" width="120">
+    <h2>تسجيل دخول الطالب</h2>
+
+    
+
+    <form method="POST" action="/student_login">
+      <input type="text" name="full_name" placeholder="الاسم الكامل" id="name"><br><br>
+      <input type="text" name="university_id" placeholder="الرقم الجامعي" id="uid"><br><br>
+      <button type="submit">دخول</button>
+    </form>
+  </div>
+
+  <script>
+    window.onload = function() {
+      
+    }
+  </script>
+</body>
+</html>
