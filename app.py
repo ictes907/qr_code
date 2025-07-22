@@ -9,12 +9,12 @@ app = Flask(__name__)
 app.secret_key = "your-secret-key"
 
 # الاتصال بقاعدة بيانات Neon
+
 def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password="npg_WHVUR3xdZ6OY"
-
+        password="npg_WHVRJ3xZG0Y",
         host="ep-withered-snow-aeck2ex1-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
