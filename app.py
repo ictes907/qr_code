@@ -20,7 +20,12 @@ def get_db_connection():
     )
 @app.route("/show_password")
 def print_password():
-    return f"<h3>🕵️‍♂️ كلمة السر حالياً داخل الكود هي: {password}</h3>"
+    try:
+        conn = get_db_connection()
+        # لو الاتصال نجح، نعرض الكلمة المستخدمة
+        return "<h3>✅ الاتصال نجح فعليًا، والكلمة ضمن الكود تعمل</h3>"
+    except Exception as e:
+        return f"<h3>❌ فشل الاتصال، والخطأ:<br>{e}</h3>"
 
 @app.route("/")
 def home():
