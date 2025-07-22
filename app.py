@@ -38,6 +38,7 @@ def register_attendance():
 
     return "<h3>✅ تم تسجيل حضورك بنجاح للمادة رقم {}!</h3>".format(course_id)
 
+
 @app.route("/show_password")
 def print_password():
     try:
