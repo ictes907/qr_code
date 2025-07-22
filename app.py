@@ -13,7 +13,7 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password="npg_0mjk6SYARFUw",
+        password="npg_Wf4YwilR6NHn",
         host="ep-withered-snow-aeck2ex1-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
@@ -514,6 +514,19 @@ def export_attendance():
     return send_file(output, as_attachment=True,
                      download_name="attendance.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                     @app.route("/debug_db")
+def debug_db():
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM students")
+        count = cursor.fetchone()[0]
+        cursor.close()
+        db.close()
+        return f"<h3>✅ الاتصال ناجح، عدد الطلاب: {count}</h3>"
+    except Exception as e:
+        return f"<h3>❌ فشل الاتصال:<br>{e}</h3>"
+
 @app.route("/logout")
 def logout():
     session.clear()
