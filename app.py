@@ -13,7 +13,7 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password="npg_RACpXNhy57aE",
+        password="npg_0mjk6SYARFUw",
         host="ep-withered-snow-aeck2ex1-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
