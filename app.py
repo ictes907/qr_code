@@ -18,6 +18,9 @@ def get_db_connection():
         port="5432",
         sslmode="require"
     )
+@app.route("/show_password")
+def print_password():
+    return f"<h3>🕵️‍♂️ كلمة السر حالياً داخل الكود هي: {password}</h3>"
 
 @app.route("/")
 def home():
