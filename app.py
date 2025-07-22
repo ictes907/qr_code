@@ -164,6 +164,15 @@ def student_courses():
     db.close()
 
     return render_template("student_courses.html", courses=courses)
+@app.route("/scan_qr")
+def scan_qr():
+    course_id = request.args.get("course_id")
+    student_id = session.get("student_id")
+
+    if not student_id:
+        return redirect("/")
+
+    return render_template("student_scan.html", course_id=course_id)
 
 def login_teacher():
     if request.method == "POST":
