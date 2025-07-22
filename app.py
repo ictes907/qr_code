@@ -173,6 +173,9 @@ def scan_qr():
         return redirect("/")
 
     return render_template("student_scan.html", course_id=course_id)
+    from datetime import datetime
+    ...
+    return render_template("success.html", course_id=course_id, now=datetime.now().strftime("%H:%M:%S"))
 
 def login_teacher():
     if request.method == "POST":

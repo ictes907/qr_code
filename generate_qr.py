@@ -1,5 +1,6 @@
 import qrcode
 
-url = "http://localhost:5000/confirm_attendance?course_id=4&student_id=S1001"
+url = "https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id=4&student_id=S1001"
 img = qrcode.make(url)
-img.save("test_qr.png")
+img.save("qr_course_4.png")
+
