@@ -54,7 +54,18 @@ def student_login():
 
     return render_template("student_login.html")
 
-
+@app.route("/debug_db")
+def debug_db():
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM students")
+        count = cursor.fetchone()[0]
+        cursor.close()
+        db.close()
+        return f"<h3>✅ الاتصال ناجح، عدد الطلاب: {count}</h3>"
+    except Exception as e:
+        return f"<h3>❌ فشل الاتصال:<br>{e}</h3>"
 @app.route("/student_dashboard")
 def student_dashboard():
     if "student_id" not in session:
@@ -517,18 +528,7 @@ def export_attendance():
     return send_file(output, as_attachment=True,
                      download_name="attendance.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-@app.route("/debug_db")
-def debug_db():
-    try:
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM students")
-        count = cursor.fetchone()[0]
-        cursor.close()
-        db.close()
-        return f"<h3>✅ الاتصال ناجح، عدد الطلاب: {count}</h3>"
-    except Exception as e:
-        return f"<h3>❌ فشل الاتصال:<br>{e}</h3>"
+
 
 @app.route("/logout")
 def logout():
