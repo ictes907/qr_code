@@ -13,14 +13,12 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password="npg_Y2s0LnQTzvJC",
+        password="npg_2ogfihcX5JEO",  # ← اكتبيها يدويًا من Neon بعد Reset
         host="ep-withered-snow-aeck2ex1-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
     )
 
-
-    
 @app.route("/")
 def home():
     return render_template("student_login.html")
