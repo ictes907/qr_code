@@ -12,23 +12,26 @@
     <label>السنة:</label>
     <select name="year_id">
       {% for year in years %}
-        <option value="{{ year.id }}">{{ year.year_name }}</option>
+      <option value="{{ year[0] }}">{{ year[1] }}</option>
       {% endfor %}
+    
     </select><br><br>
 
     <label>القسم:</label>
     <select name="department_id">
       <option value="">(اختياري)</option>
       {% for dep in departments %}
-        <option value="{{ dep.id }}">{{ dep.department_name }}</option>
+      <option value="{{ dep[0] }}">{{ dep[1] }}</option>
       {% endfor %}
+
     </select><br><br>
 
     <label>الفصل:</label>
     <select name="semester_id">
       {% for sem in semesters %}
-        <option value="{{ sem.id }}">{{ sem.semester_name }}</option>
+      <option value="{{ sem[0] }}">{{ sem[1] }}</option>
       {% endfor %}
+
     </select><br><br>
 
     <button type="submit">عرض المواد</button>
