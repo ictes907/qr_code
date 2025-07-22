@@ -69,6 +69,28 @@ def student_dashboard():
                            years=years,
                            departments=departments,
                            semesters=semesters)
+@app.route("/student_courses", methods=["GET"])
+def student_courses():
+    if "student_id" not in session:
+        return redirect("/")
+
+    year_id = request.args.get("year_id")
+    department_id = request.args.get("department_id")
+    semester_id = request.args.get("semester_id")
+
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT id, course_name, qr_code
+        FROM courses
+        WHERE year_id = %s AND department_id = %s AND semester_id = %s
+    """, (year_id, department_id, semester_id))
+
+    courses = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return render_template("student_courses.html", courses=courses)
 
 def login_teacher():
     if request.method == "POST":
@@ -436,11 +458,12 @@ def confirm_attendance():
     student_id = request.args.get("student_id")
 
     if not course_id or not student_id:
-        return "بيانات ناقصة", 400
+        return "<h3>❌ بيانات ناقصة</h3>", 400
 
     db = get_db_connection()
     cursor = db.cursor()
 
+    # تأكد من صحة الطالب والمادة
     cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
     student = cursor.fetchone()
     cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
@@ -449,17 +472,20 @@ def confirm_attendance():
     if not student or not course:
         cursor.close()
         db.close()
-        return "الطالب أو المادة غير موجودة", 404
+        return "<h3>❌ الطالب أو المادة غير موجودة</h3>", 404
 
+    # تسجيل الحضور
     cursor.execute("""
-        INSERT INTO attendance (student_id, course_id, attendance_date, status) 
-        VALUES (%s, %s, CURRENT_DATE, 'حاضر')
-    """, (student_id, course_id))
+        INSERT INTO attendance (student_id, course_id, attendance_date, status)
+        VALUES (%s, %s, CURRENT_DATE, %s)
+    """, (student_id, course_id, "حاضر"))
+
     db.commit()
     cursor.close()
     db.close()
 
-    return render_template("attendance_success.html", student=student[0], course=course[0])
+    return render_template("student_scan.html", student=student[0], course=course[0])
+
 @app.route("/export_attendance")
 def export_attendance():
     db = get_db_connection()
