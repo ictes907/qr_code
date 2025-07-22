@@ -27,6 +27,34 @@ def print_password():
         return "<h3>✅ الاتصال نجح فعليًا، والكلمة ضمن الكود تعمل</h3>"
     except Exception as e:
         return f"<h3>❌ فشل الاتصال، والخطأ:<br>{e}</h3>"
+@app.route("/debug_lists")
+def debug_lists():
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM years")
+    y_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM departments")
+    d_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM semesters")
+    s_count = cursor.fetchone()[0]
+
+    cursor.close()
+    db.close()
+
+    return f"<h3>📊 عدد السنوات: {y_count} | الأقسام: {d_count} | الفصول: {s_count}</h3>"
+@app.route("/inspect_years")
+def inspect_years():
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM years LIMIT 5")
+    rows = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return f"<pre>{rows}</pre>"
 
 @app.route("/")
 def home():
@@ -77,8 +105,6 @@ def debug_db():
 def student_dashboard():
     if "student_id" not in session:
         return redirect("/")
-
-    # جلب البيانات المطلوبة
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM years")
@@ -95,6 +121,7 @@ def student_dashboard():
                            years=years,
                            departments=departments,
                            semesters=semesters)
+
 @app.route("/student_courses", methods=["GET"])
 def student_courses():
     if "student_id" not in session:
