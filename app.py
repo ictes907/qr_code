@@ -13,7 +13,7 @@ def get_db_connection():
     return psycopg2.connect(
         dbname="neondb",
         user="neondb_owner",
-        password="npg_JhZQv0DABr2t",
+        password="npg_yxuQMXo7CY6w",
         host="ep-withered-snow-aeck2ex1-pooler.c-2.us-east-2.aws.neon.tech",
         port="5432",
         sslmode="require"
@@ -21,31 +21,36 @@ def get_db_connection():
 @app.route("/")
 def home():
     return render_template("student_login.html")
-
 @app.route("/student_login", methods=["GET", "POST"])
 def student_login():
     if request.method == "POST":
-        full_name = request.form.get("full_name", "").strip()
-        university_id = request.form.get("university_id", "").strip()
+        try:
+            full_name = request.form.get("full_name", "").strip()
+            university_id = request.form.get("university_id", "").strip()
 
-        if not full_name or not university_id:
-            return render_template("student_login.html", error="يرجى تعبئة جميع الحقول")
+            # التحقق من القيم
+            if not full_name or not university_id:
+                return render_template("student_login.html", error="يرجى تعبئة جميع الحقول")
 
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM students WHERE full_name = %s AND university_id = %s", 
-                       (full_name, university_id))
-        student = cursor.fetchone()
-        cursor.close()
-        db.close()
+            db = get_db_connection()
+            cursor = db.cursor()
+            cursor.execute("SELECT * FROM students WHERE full_name = %s AND university_id = %s",
+                           (full_name, university_id))
+            student = cursor.fetchone()
+            cursor.close()
+            db.close()
 
-        if student:
-            session["student_id"] = student[0]
-            session["student_name"] = student[1]
-            return redirect("/student_dashboard")
-        else:
-            return render_template("student_login.html", error="البيانات غير صحيحة")
+            if student:
+                session["student_id"] = student[0]
+                session["student_name"] = student[1]
+                return redirect("/student_dashboard")
+            else:
+                return render_template("student_login.html", error="البيانات غير صحيحة")
+        except Exception as e:
+            return f"<h3>❌ خطأ داخلي:<br>{e}</h3>"
+
     return render_template("student_login.html")
+
 
 @app.route("/student_dashboard")
 def student_dashboard():
