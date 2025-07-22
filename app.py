@@ -52,6 +52,7 @@ def student_dashboard():
     if "student_id" not in session:
         return redirect("/")
 
+    # جلب البيانات المطلوبة
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM years")
@@ -68,7 +69,7 @@ def student_dashboard():
                            years=years,
                            departments=departments,
                            semesters=semesters)
-@app.route("/login", methods=["GET", "POST"])
+
 def login_teacher():
     if request.method == "POST":
         university_id = request.form.get("university_id")
