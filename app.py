@@ -387,9 +387,7 @@ def add_course():
 
     # ثانيًا: توليد رابط الحضور الكامل كرابط QR
     qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
-    filename = f"qr_course_{course_id}.png"
-    img = qrcode.make(qr_link)
-    img.save(f"static/{filename}")
+    
     # ثالثًا: حفظ الرابط داخل حقل qr_code
     cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
 
