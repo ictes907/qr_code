@@ -1,3 +1,23 @@
-<h2>✅ تم تسجيل حضورك بنجاح!</h2>
-<p>رقم المادة: {{ course_id }}</p>
-<p>🕒 الوقت: {{ now }}</p>
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تم تسجيل الحضور</title>
+  <style>
+    body {
+      font-family: "Cairo", sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      direction: rtl;
+    }
+  </style>
+</head>
+<body>
+  <h2>✅ تم تسجيل حضورك بنجاح</h2>
+  <p>📘 المادة رقم: {{ course_id }}</p>
+  <p>🎓 الطالب: {{ student_id }}</p>
+  <p>🕒 الوقت: {{ timestamp }}</p>
+  <a href="/student_dashboard">العودة إلى الواجهة</a>
+</body>
+</html>
+

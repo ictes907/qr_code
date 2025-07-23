@@ -3,6 +3,7 @@ import psycopg2
 import os
 import pandas as pd
 from io import BytesIO
+from datetime import datetime
 import urllib.parse
 
 app = Flask(__name__)
@@ -595,6 +596,25 @@ def export_attendance():
                      download_name="attendance.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
+
+
+@app.route("/confirm_attendance")
+def confirm_attendance():
+    course_id = request.args.get("course_id")
+    student_id = request.args.get("student_id")
+
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO attendance (student_id, course_id) VALUES (%s, %s)",
+                   (student_id, course_id))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return render_template("success.html",
+                           course_id=course_id,
+                           student_id=student_id,
+                           timestamp=datetime.now().strftime("%H:%M:%S"))
 
 @app.route("/logout")
 def logout():
