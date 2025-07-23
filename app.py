@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 import psycopg2
 import os
-from db import get_db_connection
-
+from app import get_db_connection
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
