@@ -376,26 +376,19 @@ def add_course():
     db = get_db_connection()
     cursor = db.cursor()
 
-    # 1️⃣ إضافة المادة واسترجاع ID جديد
+    # 1️⃣ إدخال المادة (بدون qr_code حالياً)
     cursor.execute("""
         INSERT INTO courses (course_name, year_id, department_id, semester_id)
         VALUES (%s, %s, %s, %s)
         RETURNING id
     """, (course_name, year_id, department_id, semester_id))
 
-    course_id = cursor.fetchone()[0]  # ✅ course_id جاهز للاستعمال
+    course_id = cursor.fetchone()[0]
 
-
-    # 2️⃣ توليد رابط الحضور الكامل للمادة
+    # 2️⃣ توليد رابط الحضور
     qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
 
-    # 3️⃣ توليد صورة QR وتخزينها
-    import qrcode
-    filename = f"qr_course_{course_id}.png"
-    img = qrcode.make(qr_link)
-    img.save(f"static/{filename}")
-
-    # 4️⃣ حفظ اسم الصورة داخل حقل qr_code أو الرابط نفسه
+    # 3️⃣ تحديث الجدول بالحقل qr_code
     cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
 
     db.commit()
@@ -403,6 +396,7 @@ def add_course():
     db.close()
 
     return redirect("/courses_dashboard")
+
 
 
 
