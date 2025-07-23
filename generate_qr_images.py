@@ -1,4 +1,5 @@
 import os
+from db import get_db_connection
 import psycopg2
 import qrcode
 
