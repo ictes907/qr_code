@@ -369,25 +369,33 @@ def courses():
 @app.route("/add_course", methods=["POST"])
 def add_course():
     course_name = request.form["course_name"]
-    department_id = request.form["department_id"]
     year_id = request.form["year_id"]
+    department_id = request.form["department_id"]
     semester_id = request.form["semester_id"]
 
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute(
-        "INSERT INTO courses (course_name, department_id, year_id, semester_id) VALUES (%s, %s, %s, %s)",
-        (course_name, department_id, year_id, semester_id))
-    course_id = cursor.lastrowid
 
-    # توليد رمز QR للمادة
-    qr_filename = generate_qr(course_id, course_name)
-    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_filename, course_id))
+    # إدخال المادة بدون رمز QR
+    cursor.execute("""
+        INSERT INTO courses (course_name, year_id, department_id, semester_id)
+        VALUES (%s, %s, %s, %s) RETURNING id
+    """, (course_name, year_id, department_id, semester_id))
+
+    course_id = cursor.fetchone()[0]
+
+    # توليد الرابط
+    qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
+
+    # حفظ الرابط كنص في الحقل qr_code
+    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
 
     db.commit()
     cursor.close()
     db.close()
-    return redirect("/courses")
+
+    return redirect("/courses_dashboard")
+
 
 @app.route("/edit_course/<int:course_id>", methods=["POST"])
 def edit_course(course_id):
