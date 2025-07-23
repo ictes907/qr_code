@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 import psycopg2
 import os
+from app import get_db_connection
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
@@ -409,8 +410,35 @@ def add_course():
     cursor.close()
     db.close()
 
+   
     return render_template("add_course.html", years=years, departments=departments, semesters=semesters)
 
+def generate_qr_images():
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    # استرجاع كل المواد مع الروابط
+    cursor.execute("SELECT id, qr_code FROM courses")
+    courses = cursor.fetchall()
+
+    for course_id, qr_link in courses:
+        filename = f"qr_course_{course_id}.png"
+        path = f"static/qr/{filename}"
+
+        # توليد صورة QR
+        img = qrcode.make(qr_link)
+
+        # حفظ الصورة داخل مجلد static
+        os.makedirs("static/qr", exist_ok=True)
+        img.save(path)
+
+        print(f"✅ تم حفظ الصورة: {filename}")
+
+    cursor.close()
+    db.close()
+
+# تنفيذ الوظيفة
+generate_qr_images()
 
 
 
