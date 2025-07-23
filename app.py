@@ -383,7 +383,8 @@ def add_course():
         RETURNING id
     """, (course_name, year_id, department_id, semester_id))
 
-    course_id = cursor.fetchone()[0]  ✅ ← صار course_id معروف
+    course_id = cursor.fetchone()[0]  # ✅ course_id جاهز للاستعمال
+
 
     # 2️⃣ توليد رابط الحضور الكامل للمادة
     qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
