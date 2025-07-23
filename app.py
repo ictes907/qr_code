@@ -598,24 +598,6 @@ def export_attendance():
 
 
 
-@app.route("/confirm_attendance")
-def confirm_attendance():
-    course_id = request.args.get("course_id")
-    student_id = request.args.get("student_id")
-
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("INSERT INTO attendance (student_id, course_id) VALUES (%s, %s)",
-                   (student_id, course_id))
-    db.commit()
-    cursor.close()
-    db.close()
-
-    return render_template("success.html",
-                           course_id=course_id,
-                           student_id=student_id,
-                           timestamp=datetime.now().strftime("%H:%M:%S"))
-
 @app.route("/logout")
 def logout():
     session.clear()
