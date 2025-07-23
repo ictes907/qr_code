@@ -366,36 +366,51 @@ def courses():
     db.close()
     return render_template("courses.html", courses=courses_list)
 
-@app.route("/add_course", methods=["POST"])
+@app.route("/add_course", methods=["GET", "POST"])
 def add_course():
-    course_name = request.form["course_name"]
-    year_id = request.form["year_id"]
-    department_id = request.form["department_id"]
-    semester_id = request.form["semester_id"]
-
     db = get_db_connection()
     cursor = db.cursor()
 
-    # 1️⃣ إدخال المادة (بدون qr_code حالياً)
-    cursor.execute("""
-        INSERT INTO courses (course_name, year_id, department_id, semester_id)
-        VALUES (%s, %s, %s, %s)
-        RETURNING id
-    """, (course_name, year_id, department_id, semester_id))
+    if request.method == "POST":
+        # استلام البيانات من النموذج
+        course_name = request.form["course_name"]
+        year_id = request.form["year_id"]
+        department_id = request.form["department_id"]
+        semester_id = request.form["semester_id"]
 
-    course_id = cursor.fetchone()[0]
+        # إدخال المادة داخل القاعدة
+        cursor.execute("""
+            INSERT INTO courses (course_name, year_id, department_id, semester_id)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """, (course_name, year_id, department_id, semester_id))
 
-    # 2️⃣ توليد رابط الحضور
-    qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
+        course_id = cursor.fetchone()[0]
 
-    # 3️⃣ تحديث الجدول بالحقل qr_code
-    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
+        # توليد رابط حضور للمادة
+        qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
 
-    db.commit()
+        # حفظ الرابط داخل حقل qr_code
+        cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
+
+        db.commit()
+        cursor.close()
+        db.close()
+
+        return redirect("/courses_dashboard")
+
+    # لو دخلت الصفحة بدون POST، نعرض النموذج
+    cursor.execute("SELECT * FROM years")
+    years = cursor.fetchall()
+    cursor.execute("SELECT * FROM departments")
+    departments = cursor.fetchall()
+    cursor.execute("SELECT * FROM semesters")
+    semesters = cursor.fetchall()
     cursor.close()
     db.close()
 
-    return redirect("/courses_dashboard")
+    return render_template("add_course.html", years=years, departments=departments, semesters=semesters)
+
 
 
 
