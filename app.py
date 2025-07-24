@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
-import psycopg2
 import os
+import psycopg2
+import qrcode
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
@@ -392,8 +393,7 @@ def add_course():
 
         # حفظ الرابط داخل حقل qr_code
         cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
-        import qrcode
-        import os
+        
 
         # اسم الصورة بناءً على رقم المادة
         filename = f"qr_course_{course_id}.png"
