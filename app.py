@@ -673,14 +673,14 @@ def export_attendance():
 from db_teacher import get_db_connection
 
 from neon_conn import get_neon_connection
-from mambe_conn import get_mambe_connection
+from mamp_conn import get_mamp_connection
 
 def sync_courses():
     neon_db = get_neon_connection()
-    mambe_db = get_mambe_connection()
+    mambe_db = get_mamp_connection()
     
     neon_cur = neon_db.cursor()
-    mambe_cur = mambe_db.cursor()
+    mambe_cur = mammp_db.cursor()
 
     neon_cur.execute("SELECT id, course_name, qr_code, department_id, year_id, semester_id FROM courses")
     rows = neon_cur.fetchall()
