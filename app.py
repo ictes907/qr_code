@@ -20,6 +20,8 @@ def get_db_connection():
         port="5432",
         sslmode="require"
     )
+from db_student import get_db_connection
+
 @app.route("/register_attendance")
 def register_attendance():
     course_id = request.args.get("course_id")
@@ -40,6 +42,7 @@ def register_attendance():
 
     return "<h3>✅ تم تسجيل حضورك بنجاح للمادة رقم {}!</h3>".format(course_id)
 
+from db_student import get_db_connection
 
 @app.route("/show_password")
 def print_password():
@@ -67,6 +70,8 @@ def debug_lists():
     db.close()
 
     return f"<h3>📊 عدد السنوات: {y_count} | الأقسام: {d_count} | الفصول: {s_count}</h3>"
+from db_student import get_db_connection
+
 @app.route("/inspect_years")
 def inspect_years():
     db = get_db_connection()
@@ -77,10 +82,13 @@ def inspect_years():
     db.close()
 
     return f"<pre>{rows}</pre>"
+from db_student import get_db_connection
 
 @app.route("/")
 def home():
     return render_template("student_login.html")
+from db_student import get_db_connection
+
 @app.route("/student_login", methods=["GET", "POST"])
 def student_login():
     if request.method == "POST":
@@ -110,6 +118,7 @@ def student_login():
             return f"<h3>❌ خطأ داخلي:<br>{e}</h3>"
 
     return render_template("student_login.html")
+from db_student import get_db_connection
 
 @app.route("/debug_db")
 def debug_db():
@@ -123,6 +132,8 @@ def debug_db():
         return f"<h3>✅ الاتصال ناجح، عدد الطلاب: {count}</h3>"
     except Exception as e:
         return f"<h3>❌ فشل الاتصال:<br>{e}</h3>"
+from db_student import get_db_connection
+
 @app.route("/student_dashboard")
 def student_dashboard():
     if "student_id" not in session:
@@ -143,6 +154,7 @@ def student_dashboard():
                            years=years,
                            departments=departments,
                            semesters=semesters)
+from db_student import get_db_connection
 
 @app.route("/student_courses", methods=["GET"])
 def student_courses():
@@ -166,6 +178,8 @@ def student_courses():
     db.close()
 
     return render_template("student_courses.html", courses=courses)
+from db_student import get_db_connection
+
 @app.route("/scan_qr")
 def scan_qr():
     course_id = request.args.get("course_id")
@@ -178,28 +192,31 @@ def scan_qr():
     from datetime import datetime
     ...
     return render_template("success.html", course_id=course_id, now=datetime.now().strftime("%H:%M:%S"))
+from db_teacher import get_db_connection
 
-def login_teacher():
+@app.route("/login", methods=["GET", "POST"])
+def login():
     if request.method == "POST":
-        university_id = request.form.get("university_id")
-        password = request.form.get("password")
+        university_id = request.form["university_id"]
+        password = request.form["password"]
 
-        if not university_id or not password:
-            return render_template("login.html", error="يرجى تعبئة جميع الحقول")
-
+        # افحص الحساب داخل جدول المدرّسين
         db = get_db_connection()
         cursor = db.cursor()
-        cursor.execute("SELECT id, full_name, password FROM teachers WHERE university_id = %s", (university_id,))
+        cursor.execute("SELECT id FROM teachers WHERE university_id = %s AND password = %s", (university_id, password))
         teacher = cursor.fetchone()
-        cursor.close()
-        db.close()
+        cursor.close(); db.close()
 
-        if teacher and teacher[2] == password:
+        if teacher:
             session["teacher_id"] = teacher[0]
             return redirect("/dashboard")
         else:
-            return render_template("login.html", error="البيانات غير صحيحة")
+            return "<h3>❌ بيانات غير صحيحة</h3>"
+
+    # عرض نموذج تسجيل الدخول
     return render_template("login.html")
+
+from db_teacher import get_db_connection
 
 @app.route("/dashboard")
 def dashboard():
@@ -214,6 +231,8 @@ def dashboard():
     db.close()
 
     return render_template("dashboard.html", teacher=teacher)
+from db_teacher import get_db_connection
+
 @app.route("/students")
 def students():
     db = get_db_connection()
@@ -267,6 +286,8 @@ def delete_student(id):
     cursor.close()
     db.close()
     return redirect("/students")
+from db_teacher import get_db_connection
+
 @app.route("/departments")
 def departments():
     db = get_db_connection()
@@ -316,6 +337,8 @@ def delete_department(id):
     cursor.close()
     db.close()
     return redirect("/departments")
+from db_teacher import get_db_connection
+
 @app.route("/years")
 def years():
     db = get_db_connection()
@@ -357,6 +380,9 @@ def delete_year(id):
     cursor.close()
     db.close()
     return redirect("/years")
+
+from db_teacher import get_db_connection
+   
 @app.route("/courses")
 def courses():
     db = get_db_connection()
@@ -428,29 +454,20 @@ def add_course():
 def generate_qr_images():
     db = get_db_connection()
     cursor = db.cursor()
-
-    # استرجاع كل المواد مع الروابط
-    cursor.execute("SELECT id, qr_code FROM courses")
+    cursor.execute("SELECT id, qr_code FROM courses WHERE qr_code IS NOT NULL")
     courses = cursor.fetchall()
 
     for course_id, qr_link in courses:
         filename = f"qr_course_{course_id}.png"
         path = f"static/qr/{filename}"
 
-        # توليد صورة QR
-        img = qrcode.make(qr_link)
-
-        # حفظ الصورة داخل مجلد static
         os.makedirs("static/qr", exist_ok=True)
+        img = qrcode.make(qr_link)
         img.save(path)
-
-        print(f"✅ تم حفظ الصورة: {filename}")
+        print(f"📸 توليد: {filename}")
 
     cursor.close()
     db.close()
-
-# تنفيذ الوظيفة
-generate_qr_images()
 
 
 
@@ -481,6 +498,8 @@ def delete_course(id):
     cursor.close()
     db.close()
     return redirect("/courses")
+from db_teacher import get_db_connection
+
 @app.route("/teachers")
 def teachers():
     db = get_db_connection()
@@ -490,6 +509,7 @@ def teachers():
     cursor.close()
     db.close()
     return render_template("teachers.html", teachers=teachers_list)
+from db_teacher import get_db_connection
 
 @app.route("/register", methods=["GET", "POST"])
 def register_teacher():
@@ -546,6 +566,7 @@ def generate_qr(course_id, course_name, student_id="S1001"):
     qr = qrcode.make(qr_url)
     qr.save(qr_path)
     return qr_filename
+from db_student import get_db_connection
 @app.route("/attendance")
 def attendance():
     db = get_db_connection()
@@ -606,37 +627,23 @@ def delete_attendance(id):
     return redirect("/attendance")
 @app.route("/confirm_attendance")
 def confirm_attendance():
-    course_id = request.args.get("course_id")
     student_id = request.args.get("student_id")
+    course_id = request.args.get("course_id")
 
-    if not course_id or not student_id:
-        return "<h3>❌ بيانات ناقصة</h3>", 400
-
+    from db_student import get_db_connection
     db = get_db_connection()
     cursor = db.cursor()
-
-    # تأكد من صحة الطالب والمادة
-    cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
-    student = cursor.fetchone()
-    cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
-    course = cursor.fetchone()
-
-    if not student or not course:
-        cursor.close()
-        db.close()
-        return "<h3>❌ الطالب أو المادة غير موجودة</h3>", 404
-
-    # تسجيل الحضور
     cursor.execute("""
-        INSERT INTO attendance (student_id, course_id, attendance_date, status)
-        VALUES (%s, %s, CURRENT_DATE, %s)
-    """, (student_id, course_id, "حاضر"))
-
+        INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
+        VALUES (%s, %s, CURRENT_DATE, CURRENT_TIME, 'حاضر')
+    """, (student_id, course_id))
     db.commit()
-    cursor.close()
-    db.close()
+    cursor.close(); db.close()
 
-    return render_template("student_scan.html", student=student[0], course=course[0])
+    return "<h3>✅ تم تسجيل حضورك بنجاح!</h3>"
+
+
+from db_student import get_db_connection
 
 @app.route("/export_attendance")
 def export_attendance():
@@ -663,11 +670,57 @@ def export_attendance():
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
+from db_teacher import get_db_connection
+
+from neon_conn import get_neon_connection
+from mambe_conn import get_mambe_connection
+
+def sync_courses():
+    neon_db = get_neon_connection()
+    mambe_db = get_mambe_connection()
+    
+    neon_cur = neon_db.cursor()
+    mambe_cur = mambe_db.cursor()
+
+    neon_cur.execute("SELECT id, course_name, qr_code, department_id, year_id, semester_id FROM courses")
+    rows = neon_cur.fetchall()
+
+    # تنظيف جدول مامب قبل المزامنة
+    mambe_cur.execute("DELETE FROM courses")
+    
+    for row in rows:
+        mambe_cur.execute("""
+            INSERT INTO courses (id, course_name, qr_code, department_id, year_id, semester_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, row)
+
+    mambe_db.commit()
+    neon_cur.close()
+    mambe_cur.close()
+    neon_db.close()
+    mambe_db.close()
+
+    print("✅ تمت مزامنة جدول المواد بنجاح")
+
+def test_connection():
+    try:
+        conn = get_mambe_connection()
+        print("✅ الاتصال بقاعدة Mambe ناجح")
+        conn.close()
+    except Exception as e:
+        print("❌ فشل الاتصال:", e)
+
+test_connection()
 
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
+@app.route("/sync_all")
+def sync_all_route():
+    import sync_all
+    return "<h3>✅ تمت المزامنة الكاملة بنجاح</h3>"
+
 
 
 if __name__ == "__main__":
