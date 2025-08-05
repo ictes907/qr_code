@@ -680,7 +680,7 @@ def sync_courses():
     mambe_db = get_mamp_connection()
     
     neon_cur = neon_db.cursor()
-    mambe_cur = mammp_db.cursor()
+    mambe_cur = mamp_db.cursor()
 
     neon_cur.execute("SELECT id, course_name, qr_code, department_id, year_id, semester_id FROM courses")
     rows = neon_cur.fetchall()
@@ -704,7 +704,7 @@ def sync_courses():
 
 def test_connection():
     try:
-        conn = get_mambe_connection()
+        conn = get_mamp_connection()
         print("✅ الاتصال بقاعدة Mambe ناجح")
         conn.close()
     except Exception as e:
