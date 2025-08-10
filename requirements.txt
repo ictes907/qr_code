@@ -1,6 +1,7 @@
 Flask
+pymysql
+psycopg2-binary
 gunicorn
-psycopg2
 qrcode
 pandas
 openpyxl
