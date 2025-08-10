@@ -716,9 +716,11 @@ test_connection()
 def logout():
     session.clear()
     return redirect("/login")
+
 @app.route("/sync_all")
 def sync_all_route():
     import sync_all
+    sync_all.sync_all("mampe_to_neon")  # أو "neon_to_mampe"
     return "<h3>✅ تمت المزامنة الكاملة بنجاح</h3>"
 
 
