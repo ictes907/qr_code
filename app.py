@@ -682,28 +682,28 @@ from neon_conn import get_neon_connection
 
 def sync_courses():
     neon_db = get_neon_connection()
-    mambe_db = get_mamp_connection()
+    mamp_db = get_mamp_connection()
     
     neon_cur = neon_db.cursor()
-    mambe_cur = mamp_db.cursor()
+    mamp_cur = mamp_db.cursor()
 
     neon_cur.execute("SELECT id, course_name, qr_code, department_id, year_id, semester_id FROM courses")
     rows = neon_cur.fetchall()
 
     # تنظيف جدول مامب قبل المزامنة
-    mambe_cur.execute("DELETE FROM courses")
+    mamp_cur.execute("DELETE FROM courses")
     
     for row in rows:
-        mambe_cur.execute("""
+        mamp_cur.execute("""
             INSERT INTO courses (id, course_name, qr_code, department_id, year_id, semester_id)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, row)
 
-    mambe_db.commit()
+    mamp_db.commit()
     neon_cur.close()
-    mambe_cur.close()
+    mamp_cur.close()
     neon_db.close()
-    mambe_db.close()
+    mamp_db.close()
 
     print("✅ تمت مزامنة جدول المواد بنجاح")
 
