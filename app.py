@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
+from neon_conn import get_neon_connection as get_db_connection
+import os
 import psycopg2
 import pymysql
 import qrcode
@@ -6,9 +8,8 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime
 import urllib.parse
-import os
 
-from neon_conn import get_neon_connection as get_db_connection
+
 
 
 app = Flask(__name__)
@@ -677,7 +678,7 @@ def export_attendance():
 from db_teacher import get_db_connection
 
 from neon_conn import get_neon_connection
-from mamp_conn import get_mamp_connection
+
 
 def sync_courses():
     neon_db = get_neon_connection()
