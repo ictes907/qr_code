@@ -8,10 +8,7 @@ from datetime import datetime
 import urllib.parse
 import os
 
-if os.getenv("RENDER") == "true":
-    from neon_conn import get_neon_connection as get_db_connection
-else:
-    from mamp_conn import get_mamp_connection as get_db_connection
+from neon_conn import get_neon_connection as get_db_connection
 
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
