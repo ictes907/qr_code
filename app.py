@@ -1,32 +1,95 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
-from neon_conn import get_neon_connection as get_db_connection
-import os
-import psycopg2
-import pymysql
-import qrcode
-import pandas as pd
+import os, qrcode, pandas as pd
 from io import BytesIO
 from datetime import datetime
-import urllib.parse
+import psycopg2
+from db_student import get_db_connection as get_student_db
+from db_teacher import get_db_connection as get_teacher_db
 
 
 
-from flask import Flask
+
+
 app = Flask(__name__)
+app.secret_key = "your-secret-key"
 
+# الاتصال بقاعدة بيانات Neon
+def get_db_connection():
+    return psycopg2.connect(
+        dbname="neondb",
+        user="neondb_owner",
+        password="npg_2ogfihcX5JEO",
+        host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
+        port="5432",
+        sslmode="require"
+    )
+from db_student import get_db_connection
+
+@app.route("/register_attendance")
+def register_attendance():
+    course_id = request.args.get("course_id")
+    student_id = session.get("student_id")
+
+    if not student_id:
+        return redirect("/")
+
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    cursor.execute("INSERT INTO attendance (student_id, course_id) VALUES (%s, %s)",
+                   (student_id, course_id))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return "<h3>✅ تم تسجيل حضورك بنجاح للمادة رقم {}!</h3>".format(course_id)
+
+from db_student import get_db_connection
+
+@app.route("/show_password")
+def print_password():
+    try:
+        conn = get_db_connection()
+        # لو الاتصال نجح، نعرض الكلمة المستخدمة
+        return "<h3>✅ الاتصال نجح فعليًا، والكلمة ضمن الكود تعمل</h3>"
+    except Exception as e:
+        return f"<h3>❌ فشل الاتصال، والخطأ:<br>{e}</h3>"
+@app.route("/debug_lists")
+def debug_lists():
+    db = get_db_connection()
+    cursor = db.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM years")
+    y_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM departments")
+    d_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM semesters")
+    s_count = cursor.fetchone()[0]
+
+    cursor.close()
+    db.close()
+
+    return f"<h3>📊 عدد السنوات: {y_count} | الأقسام: {d_count} | الفصول: {s_count}</h3>"
+from db_student import get_db_connection
+
+@app.route("/inspect_years")
+def inspect_years():
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM years LIMIT 5")
+    rows = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return f"<pre>{rows}</pre>"
+from db_student import get_db_connection
 
 @app.route("/")
 def home():
     return render_template("student_login.html")
-from db_student import get_db_connection
-
-import os
-port = int(os.environ.get("PORT", 5000))
-app.run(host="0.0.0.0", port=port)
-
-app.secret_key = "your-secret-key"
-
-
 from db_student import get_db_connection
 
 @app.route("/student_login", methods=["GET", "POST"])
@@ -132,80 +195,6 @@ def scan_qr():
     from datetime import datetime
     ...
     return render_template("success.html", course_id=course_id, now=datetime.now().strftime("%H:%M:%S"))
-# الاتصال بقاعدة بيانات Neon
-def get_db_connection():
-    return psycopg2.connect(
-        dbname="neondb",
-        user="neondb_owner",
-        password="npg_2ogfihcX5JEO",
-        host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
-        port="5432",
-        sslmode="require"
-    )
-from db_student import get_db_connection
-
-@app.route("/register_attendance")
-def register_attendance():
-    course_id = request.args.get("course_id")
-    student_id = session.get("student_id")
-
-    if not student_id:
-        return redirect("/")
-
-    db = get_db_connection()
-    cursor = db.cursor()
-
-    cursor.execute("INSERT INTO attendance (student_id, course_id) VALUES (%s, %s)",
-                   (student_id, course_id))
-
-    db.commit()
-    cursor.close()
-    db.close()
-
-    return "<h3>✅ تم تسجيل حضورك بنجاح للمادة رقم {}!</h3>".format(course_id)
-
-from db_student import get_db_connection
-
-@app.route("/show_password")
-def print_password():
-    try:
-        conn = get_db_connection()
-        # لو الاتصال نجح، نعرض الكلمة المستخدمة
-        return "<h3>✅ الاتصال نجح فعليًا، والكلمة ضمن الكود تعمل</h3>"
-    except Exception as e:
-        return f"<h3>❌ فشل الاتصال، والخطأ:<br>{e}</h3>"
-@app.route("/debug_lists")
-def debug_lists():
-    db = get_db_connection()
-    cursor = db.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM years")
-    y_count = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM departments")
-    d_count = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM semesters")
-    s_count = cursor.fetchone()[0]
-
-    cursor.close()
-    db.close()
-
-    return f"<h3>📊 عدد السنوات: {y_count} | الأقسام: {d_count} | الفصول: {s_count}</h3>"
-from db_student import get_db_connection
-
-@app.route("/inspect_years")
-def inspect_years():
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM years LIMIT 5")
-    rows = cursor.fetchall()
-    cursor.close()
-    db.close()
-
-    return f"<pre>{rows}</pre>"
-
-
 from db_teacher import get_db_connection
 
 @app.route("/login", methods=["GET", "POST"])
