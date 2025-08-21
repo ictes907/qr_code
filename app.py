@@ -14,11 +14,12 @@ import urllib.parse
 from flask import Flask
 app = Flask(__name__)
 
+
 @app.route("/")
 def home():
-    return "أهلاً بك في التطبيق"
+    return render_template("student_login.html")
+from db_student import get_db_connection
 
-# هنا تضع الكود الخاص بـ Render
 import os
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
