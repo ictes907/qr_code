@@ -1,90 +1,27 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>مسح رمز الاستجابة السريعة</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-      background-color: #f7f7f7;
-    }
-    video {
-      width: 100%;
-      max-width: 600px;
-      border-radius: 10px;
-      margin-top: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-    #message {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #1a8917;
-    }
-    a {
-      display: inline-block;
-      margin-top: 10px;
-      background-color: #1a8917;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      text-decoration: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>مسح رمز الحضور</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
-  <h2>📘 المسح خاص بالمادة رقم: {{ course_id }}</h2>
-  <video id="video" autoplay muted></video>
-  <div id="message"></div>
+    <h2>📷 امسح رمز QR لتسجيل حضورك</h2>
+    <div id="reader" style="width:300px;"></div>
 
-  <!-- مكتبة jsQR لمسح QR -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-  <script>
-    const video = document.getElementById("video");
-    const message = document.getElementById("message");
-
-    // فتح الكاميرا الخلفية بطريقة آمنة
-    navigator.mediaDevices.getUserMedia({
-    video: { facingMode: "environment" }
-    }).then(stream => {
-    video.srcObject = stream;
-    video.play(); // ← هذه هي السطر يلي بيسمح للفيديو يشتغل فعليًا
-    }).catch(err => {
-    message.innerText = "🚫 لم يتم الوصول إلى الكاميرا الخلفية";
-    console.error("camera error:", err);
-   });
-
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    function scanFrame() {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-        if (code) {
-          console.log("QR Content:", code.data);
-
-          // تحقق إذا المحتوى عبارة عن رابط
-          if (code.data.startsWith("http")) {
-            message.innerHTML = `✅ رمز مقروء<br><a href="${code.data}" target="_blank">📲 اضغط هنا للمتابعة</a>`;
-          } else {
-            message.innerHTML = `❌ هذا الرمز لا يحتوي على رابط صالح:<br><b>${code.data}</b>`;
-          }
-
-          return; // أوقف المسح مؤقتًا بعد القراءة
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`✅ رمز تم مسحه: ${decodedText}`);
+            window.location.href = decodedText;  // يفتح رابط الحضور مباشرة
         }
-      }
 
-      requestAnimationFrame(scanFrame);
-    }
+        function onScanFailure(error) {
+            console.warn(`❌ فشل المسح: ${error}`);
+        }
 
-    requestAnimationFrame(scanFrame);
-  </script>
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    </script>
 </body>
 </html>

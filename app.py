@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 from neon_conn import get_neon_connection as get_db_connection
-import os
+from qr_generator import generate_qr_for_course
 import psycopg2
 import pymysql
 import qrcode
@@ -8,8 +8,7 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime
 import urllib.parse
-
-
+import os
 
 from flask import Flask
 app = Flask(__name__)
@@ -17,6 +16,11 @@ app.secret_key = "your-secret-key"
 
 QR_FOLDER = "static/qr_codes"
 os.makedirs(QR_FOLDER, exist_ok=True)
+
+# هنا تكتب كل الراوتات والدوال
+
+
+
 
 @app.route("/")
 def home():
@@ -53,7 +57,7 @@ def student_login():
             return f"<h3>❌ خطأ داخلي:<br>{e}</h3>"
 
     return render_template("student_login.html")
-from db_student import get_db_connection
+
 
 @app.route("/debug_db")
 def debug_db():
@@ -67,7 +71,6 @@ def debug_db():
         return f"<h3>✅ الاتصال ناجح، عدد الطلاب: {count}</h3>"
     except Exception as e:
         return f"<h3>❌ فشل الاتصال:<br>{e}</h3>"
-from db_student import get_db_connection
 
 @app.route("/student_dashboard")
 def student_dashboard():
@@ -89,7 +92,7 @@ def student_dashboard():
                            years=years,
                            departments=departments,
                            semesters=semesters)
-from db_student import get_db_connection
+
 
 @app.route("/student_courses", methods=["GET"])
 def student_courses():
@@ -113,25 +116,13 @@ def student_courses():
     db.close()
 
     return render_template("student_courses.html", courses=courses)
-from db_student import get_db_connection
 
-from datetime import datetime
 
-@app.route("/scan_qr")
+
+
+@app.route('/scan_qr')
 def scan_qr():
-    course_id = request.args.get("course_id")
-    student_id = session.get("student_id")
-
-    if not student_id:
-        return redirect("/")
-
-    # مثال: بعد عملية تسجيل الحضور
-    now = datetime.now().strftime("%H:%M:%S")
-    return render_template("success.html", course_id=course_id, now=now)
-
-import os
-port = int(os.environ.get("PORT", 5000))
-app.run(host="0.0.0.0", port=port)
+    return render_template('scan_qr.html')
 
 
 
@@ -146,7 +137,7 @@ def get_db_connection():
         port="5432",
         sslmode="require"
     )
-from db_student import get_db_connection
+
 
 @app.route("/register_attendance")
 def register_attendance():
@@ -168,7 +159,6 @@ def register_attendance():
 
     return "<h3>✅ تم تسجيل حضورك بنجاح للمادة رقم {}!</h3>".format(course_id)
 
-from db_student import get_db_connection
 
 @app.route("/show_password")
 def print_password():
@@ -196,7 +186,7 @@ def debug_lists():
     db.close()
 
     return f"<h3>📊 عدد السنوات: {y_count} | الأقسام: {d_count} | الفصول: {s_count}</h3>"
-from db_student import get_db_connection
+
 
 @app.route("/inspect_years")
 def inspect_years():
@@ -211,8 +201,6 @@ def inspect_years():
 
 
 
-
-from db_teacher import get_db_connection
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -236,7 +224,7 @@ def login():
     # عرض نموذج تسجيل الدخول
     return render_template("login.html")
 
-from db_teacher import get_db_connection
+
 
 @app.route("/dashboard")
 def dashboard():
@@ -251,7 +239,7 @@ def dashboard():
     db.close()
 
     return render_template("dashboard.html", teacher=teacher)
-from db_teacher import get_db_connection
+
 
 @app.route("/students")
 def students():
@@ -306,7 +294,7 @@ def delete_student(id):
     cursor.close()
     db.close()
     return redirect("/students")
-from db_teacher import get_db_connection
+
 
 @app.route("/departments")
 def departments():
@@ -357,7 +345,7 @@ def delete_department(id):
     cursor.close()
     db.close()
     return redirect("/departments")
-from db_teacher import get_db_connection
+
 
 @app.route("/years")
 def years():
@@ -401,7 +389,7 @@ def delete_year(id):
     db.close()
     return redirect("/years")
 
-from db_teacher import get_db_connection
+
    
 @app.route("/courses")
 def courses():
@@ -422,18 +410,16 @@ def add_course():
     year_id = request.form['year_id']
     semester_id = request.form['semester_id']
 
-    # الاتصال بقاعدة البيانات
-    conn = sqlite3.connect('your_database.db')  # ← غيّر حسب نوع القاعدة
-    cur = conn.cursor()
+    db = get_db_connection()
+    cursor = db.cursor()
 
     # 1. حفظ المادة بدون QR مؤقتًا
-    cur.execute("""
+    cursor.execute("""
         INSERT INTO courses (course_name, qr_code, department_id, year_id, semester_id)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
     """, (course_name, "", department_id, year_id, semester_id))
-
-    course_id = cur.lastrowid  # ← الحصول على ID المادة
-    conn.commit()
+    course_id = cursor.fetchone()[0] if cursor.description else cursor.lastrowid
+    db.commit()
 
     # 2. توليد رابط الحضور
     qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
@@ -444,12 +430,11 @@ def add_course():
     qr.save(filename)
 
     # 4. تحديث qr_code في قاعدة البيانات
-    cur.execute("UPDATE courses SET qr_code = ? WHERE id = ?", (qr_link, course_id))
-    conn.commit()
+    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
+    db.commit()
 
-    # 5. إنهاء الاتصال
-    cur.close()
-    conn.close()
+    cursor.close()
+    db.close()
 
     return f"تم حفظ المادة وتوليد رمز QR بنجاح! ✅<br><img src='/{filename}' width='200'>"
 
@@ -459,42 +444,6 @@ def new_course():
     return render_template('new_course.html')  # ← أنشئ نموذج HTML بسيط
 
 
-
-
-
-
-def generate_qr_images():
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT id, qr_code FROM courses WHERE qr_code IS NOT NULL")
-    courses = cursor.fetchall()
-
-    for course_id, qr_link in courses:
-        filename = f"qr_course_{course_id}.png"
-        path = f"static/qr/{filename}"
-
-        os.makedirs("static/qr", exist_ok=True)
-        img = qrcode.make(qr_link)
-        img.save(path)
-        print(f"📸 توليد: {filename}")
-
-    cursor.close()
-    db.close()
-
-def generate_qr_for_course(course_id):
-    qr_folder = "static/qr_codes"
-    os.makedirs(qr_folder, exist_ok=True)
-
-    qr_data = f"course:{course_id}"
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
-    qr.add_data(qr_data)
-    qr.make(fit=True)
-
-    img = qr.make_image(fill_color="black", back_color="white")
-    filename = f"{qr_folder}/course_{course_id}.png"
-    img.save(filename)
-
-    print(f"✅ تم توليد رمز QR للمادة الجديدة: {filename}")
 
 
 
@@ -524,7 +473,7 @@ def delete_course(id):
     cursor.close()
     db.close()
     return redirect("/courses")
-from db_teacher import get_db_connection
+
 
 @app.route("/teachers")
 def teachers():
@@ -535,7 +484,6 @@ def teachers():
     cursor.close()
     db.close()
     return render_template("teachers.html", teachers=teachers_list)
-from db_teacher import get_db_connection
 
 @app.route("/register", methods=["GET", "POST"])
 def register_teacher():
@@ -575,24 +523,18 @@ def register_teacher():
     cursor.close()
     db.close()
     return render_template("register.html", departments=departments, years=years)
-import qrcode
 
-def generate_qr(course_id, course_name, student_id="S1001"):
-    base_url = "https://qr-attendance-app-tgfx.onrender.com"
-    sanitized_name = course_name.replace(" ", "_")
-    qr_filename = f"{sanitized_name}_{course_id}.png"
-    qr_path = os.path.join("static", "qrcodes", qr_filename)
 
-    os.makedirs(os.path.dirname(qr_path), exist_ok=True)
-    qr_url = f"{base_url}/confirm_attendance?course_id={course_id}&student_id={student_id}"
+# توليد رمز لمادة واحدة
+generate_qr_for_course(course_id=5)
 
-    if os.path.exists(qr_path):
-        os.remove(qr_path)
+# توليد رمز من رابط مخصص
+generate_qr_for_course(course_id=5, qr_link="https://example.com/custom_link")
 
-    qr = qrcode.make(qr_url)
-    qr.save(qr_path)
-    return qr_filename
-from db_student import get_db_connection
+# توليد رموز لجميع المواد
+generate_qr_for_course()
+
+
 @app.route("/attendance")
 def attendance():
     db = get_db_connection()
@@ -651,25 +593,43 @@ def delete_attendance(id):
     cursor.close()
     db.close()
     return redirect("/attendance")
-@app.route("/confirm_attendance")
+
+
+@app.route('/confirm_attendance')
 def confirm_attendance():
-    student_id = request.args.get("student_id")
-    course_id = request.args.get("course_id")
+    course_id = request.args.get('course_id')
+    student_id = session.get('student_id')
 
-    from db_student import get_db_connection
-    db = get_db_connection()
-    cursor = db.cursor()
+    if not course_id or not student_id:
+        return "❌ خطأ: لا يوجد بيانات كافية لتسجيل الحضور"
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # حفظ الحضور
     cursor.execute("""
-        INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
-        VALUES (%s, %s, CURRENT_DATE, CURRENT_TIME, 'حاضر')
-    """, (student_id, course_id))
-    db.commit()
-    cursor.close(); db.close()
+        INSERT INTO attendance (student_id, course_id, timestamp)
+        VALUES (%s, %s, %s)
+    """, (student_id, course_id, datetime.now()))
+    conn.commit()
 
-    return "<h3>✅ تم تسجيل حضورك بنجاح!</h3>"
+    # جلب بيانات المادة والطالب
+    cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
+    course_name = cursor.fetchone()[0]
+
+    cursor.execute("SELECT name FROM students WHERE id = %s", (student_id,))
+    student_name = cursor.fetchone()[0]
+
+    cursor.close()
+    conn.close()
+
+    return render_template("attendance_success.html",
+                           course_name=course_name,
+                           student_name=student_name,
+                           time=datetime.now().strftime("%Y-%m-%d %H:%M"))
 
 
-from db_student import get_db_connection
+
 
 @app.route("/export_attendance")
 def export_attendance():
@@ -712,8 +672,8 @@ def sync_all_route():
 
 
 
+# 🔚 في آخر الملف:
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
-
+    host = "0.0.0.0" if "RENDER" in os.environ else "127.0.0.1"
+    app.run(host=host, port=port, debug=True)
