@@ -96,8 +96,9 @@ def inspect_years():
 from db_student import get_db_connection
 
 @app.route("/")
-def home():
+def login():
     return render_template("student_login.html")
+
 from db_student import get_db_connection
 
 @app.route("/student_login", methods=["GET", "POST"])
