@@ -95,11 +95,11 @@ def inspect_years():
     return f"<pre>{rows}</pre>"
 from db_student import get_db_connection
 
-@app.route("/")
+@app.route("/", methods=["GET", "HEAD"])
 def login():
     return render_template("student_login.html")
 
-
+from db_student import get_db_connection
 
 @app.route("/student_login", methods=["GET", "POST"])
 def student_login():
