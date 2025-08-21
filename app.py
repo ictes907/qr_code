@@ -13,7 +13,7 @@ import urllib.parse
 
 from flask import Flask
 app = Flask(__name__)
-   app.secret_key = "your-secret-key"
+app.secret_key = "your-secret-key"
 
 @app.route("/")
 def home():
