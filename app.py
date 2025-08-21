@@ -657,6 +657,25 @@ def export_attendance():
 
 
 
+@app.route('/complete-update')
+def complete_update():
+    # 1. حذف رموز QR من مجلد معين
+    qr_folder = 'static/qr_codes'
+    for filename in os.listdir(qr_folder):
+        if filename.endswith('.png'):
+            os.remove(os.path.join(qr_folder, filename))
+
+    # 2. تسجيل الحضور في قاعدة البيانات (مثال باستخدام SQLite)
+    conn = sqlite3.connect('attendance.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO attendance (student_id, status) VALUES (?, ?)", ("12345", "present"))
+    conn.commit()
+    conn.close()
+
+    # 3. عرض صفحة تأكيد
+    return render_template('complete_update.html')
+
+
 
 
 @app.route("/logout")
