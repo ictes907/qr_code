@@ -13,6 +13,7 @@ import urllib.parse
 
 from flask import Flask
 app = Flask(__name__)
+   app.secret_key = "your-secret-key"
 
 @app.route("/")
 def home():
@@ -128,7 +129,7 @@ port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
 
 
-app.secret_key = "your-secret-key"
+
 
 # الاتصال بقاعدة بيانات Neon
 def get_db_connection():
