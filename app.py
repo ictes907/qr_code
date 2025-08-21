@@ -15,6 +15,9 @@ from flask import Flask
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
 
+QR_FOLDER = "static/qr_codes"
+os.makedirs(QR_FOLDER, exist_ok=True)
+
 @app.route("/")
 def home():
     return render_template("student_login.html")
@@ -112,6 +115,8 @@ def student_courses():
     return render_template("student_courses.html", courses=courses)
 from db_student import get_db_connection
 
+from datetime import datetime
+
 @app.route("/scan_qr")
 def scan_qr():
     course_id = request.args.get("course_id")
@@ -120,10 +125,10 @@ def scan_qr():
     if not student_id:
         return redirect("/")
 
-    return render_template("student_scan.html", course_id=course_id)
-    from datetime import datetime
-    ...
-    return render_template("success.html", course_id=course_id, now=datetime.now().strftime("%H:%M:%S"))     
+    # مثال: بعد عملية تسجيل الحضور
+    now = datetime.now().strftime("%H:%M:%S")
+    return render_template("success.html", course_id=course_id, now=now)
+
 import os
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
@@ -408,47 +413,53 @@ def courses():
     db.close()
     return render_template("courses.html", courses=courses_list)
 
-@app.route("/add_course", methods=["POST"])
-def add_course():
-    course_name = request.form["course_name"]
-    department_id = request.form["department_id"]
-    year_id = request.form["year_id"]
-    semester_id = request.form["semester_id"]
 
-    conn = get_db_connection()
+
+@app.route('/add_course', methods=['POST'])
+def add_course():
+    course_name = request.form['course_name']
+    department_id = request.form['department_id']
+    year_id = request.form['year_id']
+    semester_id = request.form['semester_id']
+
+    # الاتصال بقاعدة البيانات
+    conn = sqlite3.connect('your_database.db')  # ← غيّر حسب نوع القاعدة
     cur = conn.cursor()
 
-    # إدخال المادة بدون QR
+    # 1. حفظ المادة بدون QR مؤقتًا
     cur.execute("""
         INSERT INTO courses (course_name, qr_code, department_id, year_id, semester_id)
-        VALUES (%s, %s, %s, %s, %s)
-        RETURNING id
-    """, (course_name, None, department_id, year_id, semester_id))
+        VALUES (?, ?, ?, ?, ?)
+    """, (course_name, "", department_id, year_id, semester_id))
 
-    course_id = cur.fetchone()[0]
+    course_id = cur.lastrowid  # ← الحصول على ID المادة
     conn.commit()
 
-    # توليد رمز QR وربطه بالمادة
-    qr_link = f"course:{course_id}"
-    qr_folder = "static/qr_codes"
-    os.makedirs(qr_folder, exist_ok=True)
+    # 2. توليد رابط الحضور
+    qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
 
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
-    qr.add_data(qr_link)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
+    # 3. توليد صورة QR
+    qr = qrcode.make(qr_link)
+    filename = os.path.join(QR_FOLDER, f"course_{course_id}.png")
+    qr.save(filename)
 
-    filename = f"{qr_folder}/course_{course_id}.png"
-    img.save(filename)
-
-    # تحديث qr_code في القاعدة
-    cur.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
+    # 4. تحديث qr_code في قاعدة البيانات
+    cur.execute("UPDATE courses SET qr_code = ? WHERE id = ?", (qr_link, course_id))
     conn.commit()
 
+    # 5. إنهاء الاتصال
     cur.close()
     conn.close()
-    print(f"✅ تم توليد رمز QR وحفظه: {filename}")
-    return redirect("/courses")
+
+    return f"تم حفظ المادة وتوليد رمز QR بنجاح! ✅<br><img src='/{filename}' width='200'>"
+
+# صفحة الإدخال
+@app.route('/new_course')
+def new_course():
+    return render_template('new_course.html')  # ← أنشئ نموذج HTML بسيط
+
+
+
 
 
 
@@ -704,5 +715,5 @@ def sync_all_route():
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
 
