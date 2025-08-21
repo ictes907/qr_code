@@ -1,16 +1,24 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
-import os, qrcode, pandas as pd
+from neon_conn import get_neon_connection as get_db_connection
+import os
+import psycopg2
+import pymysql
+import qrcode
+import pandas as pd
 from io import BytesIO
 from datetime import datetime
-import psycopg2
-from db_student import get_db_connection as get_student_db
-from db_teacher import get_db_connection as get_teacher_db
+import urllib.parse
 
 
 
-
-
+from flask import Flask
 app = Flask(__name__)
+
+
+import os
+port = int(os.environ.get("PORT", 5000))
+app.run(host="0.0.0.0", port=port)
+
 app.secret_key = "your-secret-key"
 
 # الاتصال بقاعدة بيانات Neon
@@ -396,63 +404,49 @@ def courses():
     db.close()
     return render_template("courses.html", courses=courses_list)
 
-@app.route("/add_course", methods=["GET", "POST"])
+@app.route("/add_course", methods=["POST"])
 def add_course():
-    db = get_db_connection()
-    cursor = db.cursor()
+    course_name = request.form["course_name"]
+    department_id = request.form["department_id"]
+    year_id = request.form["year_id"]
+    semester_id = request.form["semester_id"]
 
-    if request.method == "POST":
-        # استلام البيانات من النموذج
-        course_name = request.form["course_name"]
-        year_id = request.form["year_id"]
-        department_id = request.form["department_id"]
-        semester_id = request.form["semester_id"]
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-        # إدخال المادة داخل القاعدة
-        cursor.execute("""
-            INSERT INTO courses (course_name, year_id, department_id, semester_id)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id
-        """, (course_name, year_id, department_id, semester_id))
+    # إدخال المادة بدون QR
+    cur.execute("""
+        INSERT INTO courses (course_name, qr_code, department_id, year_id, semester_id)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING id
+    """, (course_name, None, department_id, year_id, semester_id))
 
-        course_id = cursor.fetchone()[0]
+    course_id = cur.fetchone()[0]
+    conn.commit()
 
-        # توليد رابط حضور للمادة
-        qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
+    # توليد رمز QR وربطه بالمادة
+    qr_link = f"course:{course_id}"
+    qr_folder = "static/qr_codes"
+    os.makedirs(qr_folder, exist_ok=True)
 
-        # حفظ الرابط داخل حقل qr_code
-        cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
-        
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(qr_link)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
 
-        # اسم الصورة بناءً على رقم المادة
-        filename = f"qr_course_{course_id}.png"
-        filepath = os.path.join("static", "qr", filename)
+    filename = f"{qr_folder}/course_{course_id}.png"
+    img.save(filename)
 
-        # إنشاء مجلد static/qr إذا ما كان موجود
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    # تحديث qr_code في القاعدة
+    cur.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
+    conn.commit()
 
-        # توليد الصورة من الرابط
-        img = qrcode.make(qr_link)
-        img.save(filepath)
+    cur.close()
+    conn.close()
+    print(f"✅ تم توليد رمز QR وحفظه: {filename}")
+    return redirect("/courses")
 
-        db.commit()
-        cursor.close()
-        db.close()
 
-        return redirect("/courses_dashboard")
-
-    # لو دخلت الصفحة بدون POST، نعرض النموذج
-    cursor.execute("SELECT * FROM years")
-    years = cursor.fetchall()
-    cursor.execute("SELECT * FROM departments")
-    departments = cursor.fetchall()
-    cursor.execute("SELECT * FROM semesters")
-    semesters = cursor.fetchall()
-    cursor.close()
-    db.close()
-
-   
-    return render_template("add_course.html", years=years, departments=departments, semesters=semesters)
 
 def generate_qr_images():
     db = get_db_connection()
@@ -472,6 +466,20 @@ def generate_qr_images():
     cursor.close()
     db.close()
 
+def generate_qr_for_course(course_id):
+    qr_folder = "static/qr_codes"
+    os.makedirs(qr_folder, exist_ok=True)
+
+    qr_data = f"course:{course_id}"
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    filename = f"{qr_folder}/course_{course_id}.png"
+    img.save(filename)
+
+    print(f"✅ تم توليد رمز QR للمادة الجديدة: {filename}")
 
 
 

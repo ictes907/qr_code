@@ -1,32 +1,43 @@
-import os
-from db import get_db_connection
-import psycopg2
 import qrcode
+import os
+from db_student import get_db_connection
 
-def generate_qr_images():
-    try:
-        db = get_db_connection()
-        cursor = db.cursor()
+def generate_qr_for_courses():
+    conn = get_db_connection()
+    cur = conn.cursor()
 
-        cursor.execute("SELECT id, course_name, qr_code FROM courses WHERE qr_code IS NOT NULL")
-        courses = cursor.fetchall()
+    # جلب كل المواد من قاعدة البيانات
+    cur.execute("SELECT id, course_name FROM courses")
+    courses = cur.fetchall()
 
-        os.makedirs("static/qr", exist_ok=True)
+    # إنشاء مجلد لحفظ الصور إذا لم يكن موجود
+    qr_folder = "static/qr_codes"
+    os.makedirs(qr_folder, exist_ok=True)
 
-        for course_id, course_name, qr_link in courses:
-            filename = f"{course_name}_{course_id}.png"
-            filepath = os.path.join("static/qr", filename)
+    for course in courses:
+        course_id = course[0]
+        course_name = course[1]
 
-            img = qrcode.make(qr_link)
-            img.save(filepath)
+        # محتوى الرمز: يمكن أن يكون رابط أو نص معرف المادة
+        qr_data = f"course:{course_id}"
 
-            print(f"✅ تولّدت الصورة: {filename}")
+        # توليد الرمز
+        qr = qrcode.QRCode(version=1, box_size=10, border=4)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
 
-    except Exception as e:
-        print(f"❌ خطأ أثناء التوليد: {e}")
-    finally:
-        cursor.close()
-        db.close()
+        img = qr.make_image(fill_color="black", back_color="white")
 
+        # حفظ الصورة باسم المادة أو معرفها
+        filename = f"{qr_folder}/course_{course_id}.png"
+        img.save(filename)
 
-generate_qr_images()
+        print(f"✅ تم توليد الرمز للمادة: {course_name} → {filename}")
+
+    cur.close()
+    conn.close()
+    print("🎉 تم توليد جميع رموز QR بنجاح")
+
+# تشغيل الوظيفة
+generate_qr_for_courses()
+
