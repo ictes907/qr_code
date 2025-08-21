@@ -4,10 +4,13 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
-    envVars:
-      - key: DB_HOST
-        value: your-db-host
-      - key: DB_USER
-        value: your-db-user
-      - key: DB_PASS
-        value: your-db-pass
+envVars:
+  - key: DB_HOST
+    value: ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech
+  - key: DB_USER
+    value: neondb_owner
+  - key: DB_PASS
+    value: npg_2ogfihcX5JEO
+  - key: DB_NAME
+    value: neondb
+    
