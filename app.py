@@ -26,7 +26,7 @@ os.makedirs(QR_FOLDER, exist_ok=True)
 def home():
     return render_template("student_login.html")
      
-from db_student import get_db_connection
+
 
 @app.route("/student_login", methods=["GET", "POST"])
 def student_login():
@@ -127,16 +127,6 @@ def scan_qr():
 
 
 
-# الاتصال بقاعدة بيانات Neon
-def get_db_connection():
-    return psycopg2.connect(
-        dbname="neondb",
-        user="neondb_owner",
-        password="npg_2ogfihcX5JEO",
-        host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
-        port="5432",
-        sslmode="require"
-    )
 
 
 @app.route("/register_attendance")
@@ -304,9 +294,9 @@ def departments():
     departments = cursor.fetchall()
     cursor.close()
     db.close()
-    print(rows)
+    print(departments)
+    return render_template("departments.html", rows=departments)
 
-    return render_template("departments.html", departments=departments)
 
 @app.route("/add_department", methods=["POST"])
 def add_department():
@@ -541,14 +531,6 @@ def register_teacher():
     return render_template("register.html", departments=departments, years=years)
 
 
-# توليد رمز لمادة واحدة
-generate_qr_for_course(course_id=5)
-
-# توليد رمز من رابط مخصص
-generate_qr_for_course(course_id=5, qr_link="https://example.com/custom_link")
-
-# توليد رموز لجميع المواد
-generate_qr_for_course()
 
 
 @app.route("/attendance")
@@ -632,8 +614,8 @@ def confirm_attendance():
     # جلب بيانات المادة والطالب
     cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
     course_name = cursor.fetchone()[0]
+    cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
 
-    cursor.execute("SELECT name FROM students WHERE id = %s", (student_id,))
     student_name = cursor.fetchone()[0]
 
     cursor.close()
@@ -702,7 +684,7 @@ def logout():
 @app.route("/sync_all")
 def sync_all_route():
     import sync_all
-    sync_all.sync_all("mampe_to_neon")  # أو "neon_to_mampe"
+    sync_all.sync_all("mamp_to_neon")  # أو "neon_to_mamp"
     return "<h3>✅ تمت المزامنة الكاملة بنجاح</h3>"
 
 
