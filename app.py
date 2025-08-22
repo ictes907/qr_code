@@ -180,23 +180,35 @@ def student_courses():
     if "student_id" not in session:
         return redirect("/")
 
+    # التحقق من وجود المعرفات المطلوبة
     year_id = request.args.get("year_id")
     department_id = request.args.get("department_id")
     semester_id = request.args.get("semester_id")
 
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("""
-        SELECT id, course_name, qr_code
-        FROM courses
-        WHERE year_id = %s AND department_id = %s AND semester_id = %s
-    """, (year_id, department_id, semester_id))
+    if not (year_id and department_id and semester_id):
+        return "المعطيات ناقصة", 400
 
-    courses = cursor.fetchall()
-    cursor.close()
+    # الاتصال بقاعدة البيانات باستخدام DictCursor
+    db = pymysql.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="your_database_name",
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+    with db.cursor() as cursor:
+        cursor.execute("""
+            SELECT id, course_name, qr_code
+            FROM courses
+            WHERE year_id = %s AND department_id = %s AND semester_id = %s
+        """, (year_id, department_id, semester_id))
+        courses = cursor.fetchall()
+
     db.close()
 
     return render_template("student_courses.html", courses=courses)
+
 
 
 
