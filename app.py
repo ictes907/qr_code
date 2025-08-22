@@ -759,15 +759,28 @@ def attendance():
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT s.full_name, c.course_name, a.attendance_date, a.status
+        SELECT a.id, s.full_name, c.course_name, a.attendance_date, a.status
         FROM attendance a
         JOIN students s ON a.student_id = s.id
         JOIN courses c ON a.course_id = c.id
+        ORDER BY a.attendance_date DESC
     """)
-    records = cursor.fetchall()
+    rows = cursor.fetchall()
     cursor.close()
     db.close()
-    return render_template("attendance.html", attendance=records)
+
+    attendance = []
+    for row in rows:
+        attendance.append({
+            'id': row[0],
+            'student_name': row[1],
+            'course_name': row[2],
+            'date': row[3],
+            'status': row[4]
+        })
+
+    return render_template("attendance.html", attendance=attendance)
+
 
 @app.route("/add_attendance", methods=["POST"])
 def add_attendance():
@@ -788,20 +801,19 @@ def add_attendance():
 
 @app.route("/edit_attendance/<int:id>", methods=["POST"])
 def edit_attendance(id):
-    student_id = request.form["student_id"]
-    course_id = request.form["course_id"]
     date = request.form["attendance_date"]
     status = request.form["status"]
 
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute(
-        "UPDATE attendance SET student_id = %s, course_id = %s, attendance_date = %s, status = %s WHERE id = %s",
-        (student_id, course_id, date, status, id))
+        "UPDATE attendance SET attendance_date = %s, status = %s WHERE id = %s",
+        (date, status, id))
     db.commit()
     cursor.close()
     db.close()
     return redirect("/attendance")
+
 
 @app.route("/delete_attendance/<int:id>")
 def delete_attendance(id):
@@ -825,18 +837,27 @@ def confirm_attendance():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # تحقق من عدم تكرار الحضور بنفس اليوم
+    today = datetime.now().date()
+    cursor.execute("""
+        SELECT id FROM attendance
+        WHERE student_id = %s AND course_id = %s AND attendance_date = %s
+    """, (student_id, course_id, today))
+    existing = cursor.fetchone()
+    if existing:
+        return "✅ تم تسجيل حضورك مسبقًا اليوم"
+
     # حفظ الحضور
     cursor.execute("""
-        INSERT INTO attendance (student_id, course_id, timestamp)
-        VALUES (%s, %s, %s)
-    """, (student_id, course_id, datetime.now()))
+        INSERT INTO attendance (student_id, course_id, attendance_date, status)
+        VALUES (%s, %s, %s, %s)
+    """, (student_id, course_id, today, "حاضر"))
     conn.commit()
 
     # جلب بيانات المادة والطالب
     cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
     course_name = cursor.fetchone()[0]
     cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
-
     student_name = cursor.fetchone()[0]
 
     cursor.close()
@@ -846,6 +867,7 @@ def confirm_attendance():
                            course_name=course_name,
                            student_name=student_name,
                            time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
 
