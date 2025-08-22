@@ -34,15 +34,15 @@
     }
   </style>
 </head>
+<body>
+
   <a href="/export_teachers" class="export-btn" title="تصدير إلى Excel">🟩📄</a>
+
   <form method="get" action="/teachers">
     <input type="text" name="search_id" placeholder="ابحث بالرقم الجامعي للمدرّس">
-    <button type="submit">🔍 </button>
+    <button type="submit">🔍</button>
   </form>
-  
 
-<body>
-   
   <h1>جدول المدرّسين</h1>
   <table>
     <tr>
@@ -51,22 +51,19 @@
       <th>المؤهل العلمي</th>
       <th>القسم</th>
       <th>السنين التي يدرّسها</th>
-      <th>السنة </th>
+      <th>السنة</th>
     </tr>
     {% for teacher in teachers %}
     <tr>
       <td>{{ teacher.full_name }}</td>
       <td>{{ teacher.university_id }}</td>
       <td>{{ teacher.education_level }}</td>
-      <td>{{ teacher.department_name or 'غير مخصص' }}</td>
-      <td>{{ teacher.year_name or '—' }}</td>
-
+      <td>{{ teacher.department_name if teacher.department_name else 'غير مخصص' }}</td>
+      <td>{{ teacher.year_name if teacher.year_name else '—' }}</td>
+      <td>{{ teacher.year }}</td>
     </tr>
     {% endfor %}
-    
-
-
-   
   </table>
+
 </body>
 </html>

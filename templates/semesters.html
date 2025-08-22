@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar">
-
 <head>
   <meta charset="UTF-8">
-  <title>جدول الفصول</title>
+  <title>جدول الفصول الدراسية</title>
   <link rel="stylesheet" href="/static/style.css">
   <style>
     body {
@@ -34,54 +33,51 @@
       margin-bottom: 30px;
     }
   </style>
-<head>
-    <meta charset="UTF-8">
-    <title>جدول الفصول الدراسية</title>
-    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>📌 جدول الفصول الدراسية</h1>
-    <table border="1">
-        <tr>
-            <th>id</th>
-            <th>اسم الفصل</th>
-            <th>السنة</th>
-            <th>القسم </th>
-            <th>بداية الفصل</th>
-            <th>نهاية الفصل</th>
-            <th>إجراءات</th>
-        </tr>
-        {% for semester in semesters %}
-        <tr>
-            <td>{{ semester['id'] }}</td>
-            <td>{{ semester['semester_name'] }}</td>
-            <td>{{ semester['year_name'] }}</td>
-            <td>{{ semester['department_name'] }}</td>
-            <td>{{ semester['start_date'] }}</td>
-            <td>{{ semester['end_date'] }}</td>
-            <td>
-                <form action="/delete_semester/{{ semester['id'] }}" method="get">
 
-                    <button type="submit">🗑 حذف</button>
-                </form>
-                <form action="/edit_semester/{{ semester['id'] }}" method="post">
-                    <input type="text" name="start_date" value="{{ semester['start_date'] }}" required>
-                    <input type="text" name="end_date" value="{{ semester['end_date'] }}" required>
-                    <button type="submit">✏ تعديل</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+  <h1>📌 جدول الفصول الدراسية</h1>
+  <table border="1">
+    <tr>
+      <th>id</th>
+      <th>اسم الفصل</th>
+      <th>السنة</th>
+      <th>القسم</th>
+      <th>بداية الفصل</th>
+      <th>نهاية الفصل</th>
+      <th>إجراءات</th>
+    </tr>
+    {% for semester in semesters %}
+    <tr>
+      <td>{{ semester.id }}</td>
+      <td>{{ semester.semester_name }}</td>
+      <td>{{ semester.year_name }}</td>
+      <td>{{ semester.department_name }}</td>
+      <td>{{ semester.start_date }}</td>
+      <td>{{ semester.end_date }}</td>
+      <td>
+        <form action="/delete_semester/{{ semester.id }}" method="get" style="display:inline;">
+          <button type="submit">🗑 حذف</button>
+        </form>
+        <form action="/edit_semester/{{ semester.id }}" method="post" style="display:inline;">
+          <input type="text" name="start_date" value="{{ semester.start_date }}" required>
+          <input type="text" name="end_date" value="{{ semester.end_date }}" required>
+          <button type="submit">✏ تعديل</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
 
-    <h2>➕ إضافة فصل جديد</h2>
-    <form action="/add_semester" method="post">
-        <input type="text" name="semester_name" placeholder="اسم الفصل" required>
-        <input type="number" name="year_id" placeholder=" id السنة" required>
-        <input type="text" name="department_name" placeholder="اسم القسم" required>
-        <input type="date" name="start_date" placeholder="بداية الفصل  " required>
-        <input type="date" name="end_date" placeholder="نهاية الفصل  " required>
-        <button type="submit">إضافة</button>
-    </form>
+  <h2>➕ إضافة فصل جديد</h2>
+  <form action="/add_semester" method="post">
+    <input type="text" name="semester_name" placeholder="اسم الفصل" required>
+    <input type="number" name="year_id" placeholder="ID السنة" required>
+    <input type="text" name="department_name" placeholder="اسم القسم" required>
+    <input type="date" name="start_date" required>
+    <input type="date" name="end_date" required>
+    <button type="submit">إضافة</button>
+  </form>
+
 </body>
 </html>

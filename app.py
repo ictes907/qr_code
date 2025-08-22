@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from neon_conn import get_neon_connection as get_db_connection
 from qr_generator import generate_qr_for_course
 import psycopg2
+import sqlite3
 import pymysql
 import qrcode
 import pandas as pd
@@ -14,10 +15,45 @@ from flask import Flask
 app = Flask(__name__)
 app.secret_key = "your-secret-key"
 
-QR_FOLDER = "static/qr_codes"
+QR_FOLDER = "static/qrcodes"
 os.makedirs(QR_FOLDER, exist_ok=True)
 
+def generate_qr_for_course(course_id, course_name, department_id, year_id, semester_id):
+    qr_data = f"Course: {course_name}\nDepartment: {department_id}\nYear: {year_id}\nSemester: {semester_id}"
+    qr = qrcode.make(qr_data)
+
+    filename = f"{QR_FOLDER}/course_{course_id}.png"
+    qr.save(filename)
+    return filename
+
 # هنا تكتب كل الراوتات والدوال
+
+@app.route("/generate_qr_for_courses")
+def generate_qr_for_courses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, course_name, department_id, year_id, semester_id
+        FROM courses
+        WHERE qr_code IS NULL OR qr_code = ''
+    """)
+    courses = cursor.fetchall()
+
+    for course in courses:
+        course_id, name, dept, year, semester = course
+        qr_path = generate_qr_for_course(course_id, name, dept, year, semester)
+
+        cursor.execute("""
+            UPDATE courses SET qr_code = %s WHERE id = %s
+        """, (qr_path, course_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect("/courses")
+
 
 
 
@@ -233,13 +269,59 @@ def dashboard():
 
 @app.route("/students")
 def students():
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM students")
-    students = cursor.fetchall()
+    search_id = request.args.get("search_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if search_id:
+        cursor.execute("""
+            SELECT 
+                s.id,
+                s.full_name,
+                s.university_id,
+                d.department_name,
+                y.year_name,
+                s.department_id,
+                s.year_id
+            FROM students s
+            LEFT JOIN departments d ON s.department_id = d.id
+            LEFT JOIN years y ON s.year_id = y.id
+            WHERE s.university_id = %s
+        """, (search_id,))
+    else:
+        cursor.execute("""
+            SELECT 
+                s.id,
+                s.full_name,
+                s.university_id,
+                d.department_name,
+                y.year_name,
+                s.department_id,
+                s.year_id
+            FROM students s
+            LEFT JOIN departments d ON s.department_id = d.id
+            LEFT JOIN years y ON s.year_id = y.id
+        """)
+
+    rows = cursor.fetchall()
     cursor.close()
-    db.close()
-    return render_template("students.html", students=students)
+    conn.close()
+
+    students_list = []
+    for row in rows:
+        students_list.append({
+            'id': row[0],
+            'full_name': row[1],
+            'university_id': row[2],
+            'department_name': row[3],
+            'year_name': row[4],
+            'department_id': row[5],
+            'year_id': row[6]
+        })
+
+    return render_template("students.html", students=students_list)
+
 
 @app.route("/add_student", methods=["POST"])
 def add_student():
@@ -287,15 +369,24 @@ def delete_student(id):
 
 
 @app.route("/departments")
-def departments():
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM departments")
-    departments = cursor.fetchall()
+def show_departments():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, department_name, year_id FROM departments")
+    rows = cursor.fetchall()
     cursor.close()
-    db.close()
-    print(departments)
-    return render_template("departments.html", rows=departments)
+    conn.close()
+
+    departments = []
+    for row in rows:
+        departments.append({
+            'id': row[0],
+            'department_name': row[1],
+            'year_id': row[2]
+        })
+
+    return render_template("departments.html", departments=departments)
+
 
 
 @app.route("/add_department", methods=["POST"])
@@ -303,51 +394,65 @@ def add_department():
     department_name = request.form["department_name"]
     year_id = request.form["year_id"]
 
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute(
-        "INSERT INTO departments (department_name, year_id) VALUES (%s, %s)",
-        (department_name, year_id))
-    db.commit()
-    cursor.close()
-    db.close()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO departments (department_name, year_id)
+        VALUES (%s, %s)
+    """, (department_name, year_id))
+    conn.commit()
+    conn.close()
+
     return redirect("/departments")
 
-@app.route("/edit_department/<int:department_id>", methods=["POST"])
-def edit_department(department_id):
+
+@app.route("/edit_department/<int:id>", methods=["POST"])
+def edit_department(id):
     department_name = request.form["department_name"]
     year_id = request.form["year_id"]
 
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute(
-        "UPDATE departments SET department_name = %s, year_id = %s WHERE id = %s",
-        (department_name, year_id, department_id))
-    db.commit()
-    cursor.close()
-    db.close()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE departments SET department_name = %s, year_id = %s
+        WHERE id = %s
+    """, (department_name, year_id, id))
+    conn.commit()
+    conn.close()
+
     return redirect("/departments")
 
-@app.route("/delete_department/<int:id>")
+
+@app.route("/delete_department/<int:id>", methods=["GET"])
 def delete_department(id):
-    db = get_db_connection()
-    cursor = db.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("DELETE FROM departments WHERE id = %s", (id,))
-    db.commit()
-    cursor.close()
-    db.close()
+    conn.commit()
+    conn.close()
+
     return redirect("/departments")
 
 
 @app.route("/years")
-def years():
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM years")
-    years = cursor.fetchall()
+def show_years():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, year_name FROM years")
+    rows = cursor.fetchall()
     cursor.close()
-    db.close()
+    conn.close()
+
+    years = []
+    for row in rows:
+        years.append({
+            'id': row[0],
+            'year_name': row[1]
+        })
+
     return render_template("years.html", years=years)
+
+
 
 @app.route("/add_year", methods=["POST"])
 def add_year():
@@ -383,12 +488,40 @@ def delete_year(id):
 
 @app.route('/courses')
 def show_courses():
+    search_name = request.args.get('search_name')
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM courses")
-    courses = cursor.fetchall()
+
+    if search_name:
+        cursor.execute("""
+            SELECT id, course_name, department_id, semester_id, year_id, qr_code
+            FROM courses
+            WHERE course_name ILIKE %s
+        """, (f"%{search_name}%",))
+    else:
+        cursor.execute("""
+            SELECT id, course_name, department_id, semester_id, year_id, qr_code
+            FROM courses
+        """)
+
+    rows = cursor.fetchall()
     cursor.close()
     conn.close()
+
+    courses = []
+    for row in rows:
+        qr_link = f"/static/qrcodes/{row[5]}" if row[5] else None
+        courses.append({
+            'id': row[0],
+            'course_name': row[1],
+            'department_id': row[2],
+            'semester_id': row[3],
+            'year_id': row[4],
+            'qr_code': row[5],
+            'qr_link': qr_link
+        })
+
     return render_template('courses.html', courses=courses)
 
 
@@ -396,8 +529,8 @@ def show_courses():
 
 
 
-QR_FOLDER = "static/qrcodes"
-os.makedirs(QR_FOLDER, exist_ok=True)
+
+
 
 @app.route('/add_course', methods=['POST'])
 def add_course():
@@ -408,35 +541,43 @@ def add_course():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # حفظ المادة بدون رمز QR
     cursor.execute("""
         INSERT INTO courses (course_name, department_id, year_id, semester_id)
         VALUES (%s, %s, %s, %s)
-        RETURNING id
     """, (course_name, department_id, year_id, semester_id))
-
-    course_id = cursor.fetchone()[0]
     conn.commit()
-
-    # توليد رابط الحضور
-    qr_link = url_for('confirm_attendance', course_id=course_id, _external=True)
-
-    # توليد رمز QR
-    qr = qrcode.make(qr_link)
-    qr_filename = f"course_{course_id}.png"
-    qr_path = os.path.join(QR_FOLDER, qr_filename)
-    qr.save(qr_path)
-
-    # تحديث اسم الصورة في قاعدة البيانات
-    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_filename, course_id))
-    conn.commit()
-
-    cursor.close()
     conn.close()
 
     return redirect('/courses')
 
+@app.route('/edit_course/<int:id>', methods=['POST'])
+def edit_course(id):
+    course_name = request.form['course_name']
+    department_id = request.form['department_id']
+    year_id = request.form['year_id']
+    semester_id = request.form['semester_id']
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE courses
+        SET course_name = %s, department_id = %s, year_id = %s, semester_id = %s
+        WHERE id = %s
+    """, (course_name, department_id, year_id, semester_id, id))
+    conn.commit()
+    conn.close()
+
+    return redirect('/courses')
+
+@app.route('/delete_course/<int:id>', methods=['GET'])
+def delete_course(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM courses WHERE id = %s", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/courses')
 
 
 # صفحة الإدخال
@@ -453,43 +594,49 @@ def generate_qr_route(course_id):
 
 
 
-@app.route("/edit_course/<int:course_id>", methods=["POST"])
-def edit_course(course_id):
-    course_name = request.form["course_name"]
-    department_id = request.form["department_id"]
-    year_id = request.form["year_id"]
-    semester_id = request.form["semester_id"]
-
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute(
-        "UPDATE courses SET course_name = %s, department_id = %s, year_id = %s, semester_id = %s WHERE id = %s",
-        (course_name, department_id, year_id, semester_id, course_id))
-    db.commit()
-    cursor.close()
-    db.close()
-    return redirect("/courses")
-
-@app.route("/delete_course/<int:id>")
-def delete_course(id):
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("DELETE FROM courses WHERE id = %s", (id,))
-    db.commit()
-    cursor.close()
-    db.close()
-    return redirect("/courses")
-
-
 @app.route("/teachers")
-def teachers():
-    db = get_db_connection()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM teachers")
-    teachers_list = cursor.fetchall()
+def show_teachers():
+    search_id = request.args.get("search_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if search_id:
+        cursor.execute("""
+            SELECT t.full_name, t.university_id, t.education_level,
+                   d.department_name, y.year_name, y.id AS year
+            FROM teachers t
+            LEFT JOIN departments d ON t.department_id = d.id
+            LEFT JOIN years y ON t.year_id = y.id
+            WHERE t.university_id = %s
+        """, (search_id,))
+    else:
+        cursor.execute("""
+            SELECT t.full_name, t.university_id, t.education_level,
+                   d.department_name, y.year_name, y.id AS year
+            FROM teachers t
+            LEFT JOIN departments d ON t.department_id = d.id
+            LEFT JOIN years y ON t.year_id = y.id
+        """)
+
+    rows = cursor.fetchall()
     cursor.close()
-    db.close()
-    return render_template("teachers.html", teachers=teachers_list)
+    conn.close()
+
+    teachers = []
+    for row in rows:
+        teachers.append({
+            "full_name": row[0],
+            "university_id": row[1],
+            "education_level": row[2],
+            "department_name": row[3],
+            "year_name": row[4],
+            "year": row[5]
+        })
+
+    return render_template("teachers.html", teachers=teachers)
+
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register_teacher():
@@ -530,6 +677,80 @@ def register_teacher():
     db.close()
     return render_template("register.html", departments=departments, years=years)
 
+
+
+
+# 📌 عرض جدول الفصول
+@app.route('/semesters')
+def show_semesters():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, semester_name, year_id, department_name, start_date, end_date FROM semesters
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+
+    semesters = []
+    for row in rows:
+        semesters.append({
+            'id': row[0],
+            'semester_name': row[1],
+            'year_name': row[2],  # لاحقًا نربطها باسم السنة من جدول years
+            'department_name': row[3],
+            'start_date': row[4],
+            'end_date': row[5]
+        })
+
+    return render_template('semesters.html', semesters=semesters)
+
+
+# ➕ إضافة فصل جديد
+@app.route('/add_semester', methods=['POST'])
+def add_semester():
+    semester_name = request.form['semester_name']
+    year_name = request.form['year_id']
+    department_name = request.form['department_name']
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+
+    conn = sqlite3.connect('your_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO semesters (semester_name, year_name, department_name, start_date, end_date)
+        VALUES (?, ?, ?, ?, ?)
+    """, (semester_name, year_name, department_name, start_date, end_date))
+    conn.commit()
+    conn.close()
+
+    return redirect('/semesters')
+
+# ✏ تعديل فصل
+@app.route('/edit_semester/<int:id>', methods=['POST'])
+def edit_semester(id):
+    start_date = request.form['start_date']
+    end_date = request.form['end_date']
+
+    conn = sqlite3.connect('your_database.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE semesters SET start_date = ?, end_date = ? WHERE id = ?
+    """, (start_date, end_date, id))
+    conn.commit()
+    conn.close()
+
+    return redirect('/semesters')
+
+# 🗑 حذف فصل
+@app.route('/delete_semester/<int:id>', methods=['GET'])
+def delete_semester(id):
+    conn = sqlite3.connect('your_database.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM semesters WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/semesters')
 
 
 

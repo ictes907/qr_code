@@ -53,11 +53,13 @@
         </tr>
         {% for entry in attendance %}
         <tr>
-            <td>{{ entry[1] }}</td>
-            <td>{{ entry[2] }}</td>
-            <td>{{ entry[3] }}</td>
-            <td>{{ entry[4] }}</td>
-            <td>
+          <tr>
+            <td>{{ entry[0] }}</td>  <!-- الطالب -->
+            <td>{{ entry[1] }}</td>  <!-- المادة -->
+            <td>{{ entry[2] }}</td>  <!-- التاريخ -->
+            <td>{{ entry[3] }}</td>  <!-- الحالة أو الوقت -->
+          </tr>
+          
                 <form action="/delete_attendance/{{ entry[0] }}" method="get">
                     <button type="submit">🗑 حذف</button>
                 </form>

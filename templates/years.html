@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ar">
-
 <head>
   <meta charset="UTF-8">
   <title>جدول السنوات</title>
@@ -34,46 +33,37 @@
       margin-bottom: 30px;
     }
   </style>
-<head>
-    <meta charset="UTF-8">
-    <title>جدول السنوات</title>
-    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>جدول السنوات</h1>
-    <table border="1">
-        <tr>
-            <th>id</th>
-            <th>اسم السنة</th>
-            <th>إجراءات</th>
-        </tr>
-        {% for year in years %}
-        <tr>
-            <td>{{ year['id'] }}</td>
-            <td>{{ year['year_name'] }}</td>
-            
-            <td>
-                <form action="/delete_year/{{ year['id'] }}" method="get">
+  <h1>جدول السنوات</h1>
+  <table border="1">
+    <tr>
+      <th>id</th>
+      <th>اسم السنة</th>
+      <th>إجراءات</th>
+    </tr>
+    {% for year in years %}
+    <tr>
+      <td>{{ year.id }}</td>
+      <td>{{ year.year_name }}</td>
+      <td>
+        <form action="/delete_year/{{ year.id }}" method="get" style="display:inline;">
+          <button type="submit">🗑 حذف</button>
+        </form>
+        <form action="/edit_year/{{ year.id }}" method="post" style="display:inline;">
+          <input type="text" name="year_name" value="{{ year.year_name }}" required>
+          <button type="submit">✏ تعديل</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
 
-                    <button type="submit">🗑 حذف</button>
-                </form>
-                    <form action="/edit_year/{{ year['id'] }}" method="post">
-                    <input type="text" name="year_name" value="{{ year['year_name'] }}" required>
-                    <button type="submit">✏ تعديل</button>
-                </form>
-                
-                    <button type="submit">✏ تعديل</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <h2>إضافة سنة جديدة</h2>
-    <form action="/add_year" method="post">
-        <input type="number" name="id" placeholder="id" required>
-        <input type="text" name="year_name" placeholder="اسم السنة" required>
-        <button type="submit">➕ إضافة</button>
-    </form>
+  <h2>إضافة سنة جديدة</h2>
+  <form action="/add_year" method="post">
+    <input type="number" name="id" placeholder="id" required>
+    <input type="text" name="year_name" placeholder="اسم السنة" required>
+    <button type="submit">➕ إضافة</button>
+  </form>
 </body>
 </html>

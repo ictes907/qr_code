@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ar">
-
 <head>
   <meta charset="UTF-8">
   <title>جدول الطلاب</title>
@@ -34,66 +33,57 @@
       margin-bottom: 30px;
     }
   </style>
-<head>
-    <meta charset="UTF-8">
-    <title>جدول الطلاب</title>
-    <link rel="stylesheet" href="/static/style.css">
 </head>
+<body>
+
   <a href="/export_students" class="export-btn" title="تصدير إلى Excel">🟩📄</a>
+
   <form method="get" action="/students">
     <input type="text" name="search_id" placeholder="ابحث بالرقم الجامعي">
-    <button type="submit">🔍 </button>
+    <button type="submit">🔍</button>
   </form>
-  
-<body>
-    <h1>جدول الطلاب</h1>
-    <table border="1">
-        <tr>
-            <th>id</th>
-            <th>الاسم الثلاثي</th>
-            <th>الرقم الجامعي</th>
-            <th>القسم</th>
-            <th>السنة</th>
-            <th>إجراءات</th>
-        </tr>
-        {% for student in students %}
-        <tr>
-            <td>{{ student['id'] }}</td>
-            <td>{{ student['full_name'] }}</td>
-            <td>{{ student['university_id'] }}</td>
-            <td>{{ student['department_name'] }}</td>
-            <td>{{ student['year_name'] }}</td>
-            
-            <td>
-                <form action="/delete_student/{{ student['id'] }}" method="get">
-                    <button type="submit">🗑 حذف</button>
-                </form>
-                
-        
-                <form action="/edit_student/{{ student['id'] }}" method="post">
-                    <input type="text" name="full_name" value="{{ student['full_name'] }}" required>
-                    <input type="number" name="university_id" value="{{ student['university_id'] }}" required>
-                    <input type="number" name="department_id" value="{{ student['department_id'] }}" required>
 
-                    <input type="number" name="year_id" value="{{ student['year_id'] }}" required>
+  <h1>جدول الطلاب</h1>
+  <table border="1">
+    <tr>
+      <th>id</th>
+      <th>الاسم الثلاثي</th>
+      <th>الرقم الجامعي</th>
+      <th>القسم</th>
+      <th>السنة</th>
+      <th>إجراءات</th>
+    </tr>
+    {% for student in students %}
+    <tr>
+      <td>{{ student.id }}</td>
+      <td>{{ student.full_name }}</td>
+      <td>{{ student.university_id }}</td>
+      <td>{{ student.department_name }}</td>
+      <td>{{ student.year_name }}</td>
+      <td>
+        <form action="/delete_student/{{ student.id }}" method="get" style="display:inline;">
+          <button type="submit">🗑 حذف</button>
+        </form>
+        <form action="/edit_student/{{ student.id }}" method="post" style="display:inline;">
+          <input type="text" name="full_name" value="{{ student.full_name }}" required>
+          <input type="number" name="university_id" value="{{ student.university_id }}" required>
+          <input type="number" name="department_id" value="{{ student.department_id }}" required>
+          <input type="number" name="year_id" value="{{ student.year_id }}" required>
+          <button type="submit">✏️ تعديل</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
 
-                    <button type="submit">✏️ تعديل</button>
-                </form>
-                
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+  <h2>إضافة طالب جديد</h2>
+  <form action="/add_student" method="post">
+    <input type="text" name="full_name" placeholder="الاسم الثلاثي" required>
+    <input type="text" name="university_id" placeholder="الرقم الجامعي" required>
+    <input type="number" name="department_id" placeholder="ID القسم" required>
+    <input type="number" name="year_id" placeholder="ID السنة" required>
+    <button type="submit">➕ إضافة</button>
+  </form>
 
-    <h2>إضافة طالب جديد</h2>
-    <form action="/add_student" method="post">
-        
-        <input type="text" name="full_name" placeholder="الاسم الثلاثي" required>
-        <input type="text" name="university_id" placeholder="الرقم الجامعي" required>
-        <input type="number" name="department_id" placeholder="ID القسم" required>
-        <input type="number" name="year_id" placeholder="ID السنة" required>
-        <button type="submit">➕ إضافة</button>
-    </form>
 </body>
 </html>
