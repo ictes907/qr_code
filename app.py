@@ -403,6 +403,11 @@ def courses():
 
 
 
+
+
+QR_FOLDER = "static/qrcodes"
+os.makedirs(QR_FOLDER, exist_ok=True)
+
 @app.route('/add_course', methods=['POST'])
 def add_course():
     course_name = request.form['course_name']
@@ -413,13 +418,13 @@ def add_course():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # حفظ المادة بدون qr_code
+    # حفظ المادة بدون رمز QR
     cursor.execute("""
         INSERT INTO courses (course_name, department_id, year_id, semester_id)
         VALUES (%s, %s, %s, %s)
         RETURNING id
     """, (course_name, department_id, year_id, semester_id))
-    
+
     course_id = cursor.fetchone()[0]
     conn.commit()
 
@@ -427,13 +432,12 @@ def add_course():
     qr_link = url_for('confirm_attendance', course_id=course_id, _external=True)
 
     # توليد رمز QR
-    import qrcode, os
     qr = qrcode.make(qr_link)
     qr_filename = f"course_{course_id}.png"
-    qr_path = os.path.join("static/qrcodes", qr_filename)
+    qr_path = os.path.join(QR_FOLDER, qr_filename)
     qr.save(qr_path)
 
-    # تحديث qr_code في قاعدة البيانات
+    # تحديث اسم الصورة في قاعدة البيانات
     cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_filename, course_id))
     conn.commit()
 
@@ -441,6 +445,7 @@ def add_course():
     conn.close()
 
     return redirect('/courses')
+
 
 
 # صفحة الإدخال
