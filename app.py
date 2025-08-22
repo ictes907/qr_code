@@ -27,27 +27,36 @@ def generate_qr_for_course(course_id, course_name, department_id, year_id, semes
     return filename
 
 
+
 @app.route("/generate_qr_for_courses")
 def generate_qr_for_courses():
-    connection = pymysql.connect(host="localhost", user="root", password="", database="your_db")
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    cursor.execute("SELECT * FROM courses")
-    courses = cursor.fetchall()
+    try:
+        conn = get_neon_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name FROM courses")
+        courses = cursor.fetchall()
 
-    qr_paths = []
-    for course in courses:
-        path = generate_qr_for_course(
-            course["id"],
-            course["name"],
-            course["department_id"],
-            course["year_id"],
-            course["semester_id"]
-        )
-        qr_paths.append(path)
+        qr_folder = "static/qr_codes"
+        os.makedirs(qr_folder, exist_ok=True)
 
-    connection.close()
-    return jsonify({"qr_codes": qr_paths})
+        saved_files = []
 
+        for course_id, course_name in courses:
+            # رابط الحضور
+            qr_url = f"http://localhost:5000/attend?course_id={course_id}"
+            img = qrcode.make(qr_url)
+
+            filename = f"{qr_folder}/course_{course_id}.png"
+            img.save(filename)
+            saved_files.append(f'<img src="/{filename}" alt="{course_name}" width="200">')
+
+        cursor.close()
+        conn.close()
+
+        return "<h3>رموز QR:</h3>" + "<br>".join(saved_files)
+
+    except Exception as e:
+        return f"حدث خطأ: {e}"
 
 
 @app.route("/show_qr_codes")
@@ -55,6 +64,30 @@ def show_qr_codes():
     qr_files = os.listdir(QR_FOLDER)
     qr_paths = [os.path.join(QR_FOLDER, file) for file in qr_files]
     return render_template("show_qr.html", qr_paths=qr_paths)
+
+
+
+@app.route("/attend")
+def attend():
+    course_id = request.args.get("course_id")
+    if not course_id:
+        return "المعرف غير موجود"
+
+    try:
+        conn = get_neon_connection()
+        cursor = conn.cursor()
+
+        # تسجيل الحضور (مثال: بدون اسم الطالب حالياً)
+        cursor.execute("INSERT INTO attendance (course_id, timestamp) VALUES (%s, NOW())", (course_id,))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return f"تم تسجيل الحضور للمادة رقم {course_id}"
+
+    except Exception as e:
+        return f"خطأ أثناء تسجيل الحضور: {e}"
 
 # هنا تكتب كل الراوتات والدوال
 
