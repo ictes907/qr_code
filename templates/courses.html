@@ -62,10 +62,11 @@
       <td>
         <td>
           {% if course.qr_code %}
-            <img src="{{ course.qr_code }}" alt="QR" width="40">
-          {% else %}
-            لا يوجد رمز
-          {% endif %}
+          <img src="{{ url_for('static', filename=course.qr_code.split('static/')[1]) }}" width="100">
+        {% else %}
+          لا يوجد رمز
+        {% endif %}
+        
         </td>
         
       

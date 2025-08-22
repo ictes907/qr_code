@@ -34,7 +34,7 @@ def generate_qr_for_courses():
         cursor = conn.cursor()
 
         # جلب المواد التي لا تحتوي على QR
-        cursor.execute("SELECT id, name FROM courses WHERE qr_code IS NULL")
+        cursor.execute("SELECT id FROM courses WHERE qr_code IS NULL OR qr_code = ''")
         courses = cursor.fetchall()
 
         qr_folder = "static/qr_codes"
