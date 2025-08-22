@@ -577,7 +577,7 @@ def add_course():
     year_id = request.form["year_id"]
     semester_id = request.form["semester_id"]
 
-    conn = get_neon_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # إضافة المادة إلى قاعدة البيانات
@@ -920,20 +920,26 @@ def confirm_attendance():
     """, (student_id, course_id, today))
     existing = cursor.fetchone()
     if existing:
+        cursor.close()
+        conn.close()
         return "✅ تم تسجيل حضورك مسبقًا اليوم"
 
     # حفظ الحضور
     cursor.execute("""
-        INSERT INTO attendance (student_id, course_id, attendance_date, status)
-        VALUES (%s, %s, %s, %s)
-    """, (student_id, course_id, today, "حاضر"))
+        INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (student_id, course_id, today, datetime.now().time(), 'حاضر'))
+
     conn.commit()
 
     # جلب بيانات المادة والطالب
     cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
-    course_name = cursor.fetchone()[0]
+    course_row = cursor.fetchone()
+    course_name = course_row[0] if course_row else "مادة غير معروفة"
+
     cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
-    student_name = cursor.fetchone()[0]
+    student_row = cursor.fetchone()
+    student_name = student_row[0] if student_row else "طالب غير معروف"
 
     cursor.close()
     conn.close()
@@ -942,6 +948,7 @@ def confirm_attendance():
                            course_name=course_name,
                            student_name=student_name,
                            time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
 
