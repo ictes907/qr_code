@@ -37,18 +37,35 @@
     <div id="reader"></div>
 
     <script>
-        function onScanSuccess(decodedText, decodedResult) {
-            console.log(`✅ رمز تم مسحه: ${decodedText}`);
-            window.location.href = decodedText;
-        }
-
-        function onScanFailure(error) {
-            console.warn(`❌ فشل المسح: ${error}`);
-        }
-
-        let html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    </script>
+      const html5QrCode = new Html5Qrcode("reader");
+  
+      const config = {
+          fps: 10,
+          qrbox: 250
+      };
+  
+      Html5Qrcode.getCameras().then(devices => {
+          if (devices && devices.length) {
+              // ابحث عن كاميرا خلفية
+              const backCamera = devices.find(device => device.label.toLowerCase().includes("back"));
+              const cameraId = backCamera ? backCamera.id : devices[0].id;
+  
+              html5QrCode.start(
+                  cameraId,
+                  config,
+                  decodedText => {
+                      console.log(`✅ رمز تم مسحه: ${decodedText}`);
+                      window.location.href = decodedText;
+                  },
+                  errorMessage => {
+                      console.warn(`❌ فشل المسح: ${errorMessage}`);
+                  }
+              );
+          }
+      }).catch(err => {
+          console.error("خطأ في الحصول على الكاميرات:", err);
+      });
+  </script>
+  
 </body>
 </html>
