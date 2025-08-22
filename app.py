@@ -410,33 +410,38 @@ def add_course():
     year_id = request.form['year_id']
     semester_id = request.form['semester_id']
 
-    db = get_db_connection()
-    cursor = db.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    # 1. حفظ المادة بدون QR مؤقتًا
+    # حفظ المادة بدون qr_code
     cursor.execute("""
-        INSERT INTO courses (course_name, qr_code, department_id, year_id, semester_id)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (course_name, "", department_id, year_id, semester_id))
-    course_id = cursor.fetchone()[0] if cursor.description else cursor.lastrowid
-    db.commit()
+        INSERT INTO courses (course_name, department_id, year_id, semester_id)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
+    """, (course_name, department_id, year_id, semester_id))
+    
+    course_id = cursor.fetchone()[0]
+    conn.commit()
 
-    # 2. توليد رابط الحضور
-    qr_link = f"https://qr-attendance-app-tgfx.onrender.com/confirm_attendance?course_id={course_id}"
+    # توليد رابط الحضور
+    qr_link = url_for('confirm_attendance', course_id=course_id, _external=True)
 
-    # 3. توليد صورة QR
+    # توليد رمز QR
+    import qrcode, os
     qr = qrcode.make(qr_link)
-    filename = os.path.join(QR_FOLDER, f"course_{course_id}.png")
-    qr.save(filename)
+    qr_filename = f"course_{course_id}.png"
+    qr_path = os.path.join("static/qrcodes", qr_filename)
+    qr.save(qr_path)
 
-    # 4. تحديث qr_code في قاعدة البيانات
-    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_link, course_id))
-    db.commit()
+    # تحديث qr_code في قاعدة البيانات
+    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_filename, course_id))
+    conn.commit()
 
     cursor.close()
-    db.close()
+    conn.close()
 
-    return f"تم حفظ المادة وتوليد رمز QR بنجاح! ✅<br><img src='/{filename}' width='200'>"
+    return redirect('/courses')
+
 
 # صفحة الإدخال
 @app.route('/new_course')
@@ -444,6 +449,11 @@ def new_course():
     return render_template('new_course.html')  # ← أنشئ نموذج HTML بسيط
 
 
+@app.route('/generate_qr/<int:course_id>')
+def generate_qr_route(course_id):
+    from qr_generator import generate_qr_for_course  # تأكد من استيراد الدالة
+    generate_qr_for_course(course_id)
+    return redirect('/courses')  # يرجع لصفحة عرض المواد
 
 
 
@@ -595,7 +605,7 @@ def delete_attendance(id):
     return redirect("/attendance")
 
 
-@app.route('/confirm_attendance')
+@app.route("/confirm_attendance")
 def confirm_attendance():
     course_id = request.args.get('course_id')
     student_id = session.get('student_id')
