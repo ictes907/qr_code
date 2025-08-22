@@ -27,13 +27,14 @@ def generate_qr_for_course(course_id, course_name, department_id, year_id, semes
     return filename
 
 
-
 @app.route("/generate_qr_for_courses")
 def generate_qr_for_courses():
     try:
         conn = get_neon_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, name FROM courses")
+
+        # جلب المواد التي لا تحتوي على QR
+        cursor.execute("SELECT id, name FROM courses WHERE qr_code IS NULL")
         courses = cursor.fetchall()
 
         qr_folder = "static/qr_codes"
@@ -42,21 +43,28 @@ def generate_qr_for_courses():
         saved_files = []
 
         for course_id, course_name in courses:
-            # رابط الحضور
-            qr_url = f"http://localhost:5000/attend?course_id={course_id}"
+            # توليد رابط الحضور
+            qr_url = f"https://qr-code-7jof.onrender.com/attend?course_id={course_id}"
             img = qrcode.make(qr_url)
 
-            filename = f"{qr_folder}/course_{course_id}.png"
-            img.save(filename)
-            saved_files.append(f'<img src="/{filename}" alt="{course_name}" width="200">')
+            # حفظ الصورة
+            qr_path = f"{qr_folder}/course_{course_id}.png"
+            img.save(qr_path)
+
+            # تحديث قاعدة البيانات
+            cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_path, course_id))
+            conn.commit()
+
+            saved_files.append(f'<img src="/{qr_path}" alt="{course_name}" width="200">')
 
         cursor.close()
         conn.close()
 
-        return "<h3>رموز QR:</h3>" + "<br>".join(saved_files)
+        return "<h3>تم توليد الرموز التالية:</h3>" + "<br>".join(saved_files)
 
     except Exception as e:
         return f"حدث خطأ: {e}"
+
 
 
 @app.route("/show_qr_codes")
@@ -67,32 +75,31 @@ def show_qr_codes():
 
 
 
+
+# راوت تسجيل الحضور عبر QR
 @app.route("/attend")
 def attend():
     course_id = request.args.get("course_id")
+    student_id = request.args.get("student_id")  # اختياري
+
     if not course_id:
-        return "المعرف غير موجود"
+        return "❌ المعرف غير موجود"
 
-    try:
-        conn = get_neon_connection()
-        cursor = conn.cursor()
+    conn = get_neon_connection()
+    cursor = conn.cursor()
 
-        # تسجيل الحضور (مثال: بدون اسم الطالب حالياً)
-        cursor.execute("INSERT INTO attendance (course_id, timestamp) VALUES (%s, NOW())", (course_id,))
-        conn.commit()
+    cursor.execute("""
+        INSERT INTO attendance (course_id, attendance_date, status)
+        VALUES (%s, NOW(), 'present')
+    """, (course_id,))
+    conn.commit()
 
-        cursor.close()
-        conn.close()
+    cursor.close()
+    conn.close()
 
-        return f"تم تسجيل الحضور للمادة رقم {course_id}"
+    return "✅ تم تسجيل حضورك بنجاح"
 
-    except Exception as e:
-        return f"خطأ أثناء تسجيل الحضور: {e}"
-
-# هنا تكتب كل الراوتات والدوال
-
-
-
+# باقي الراوتات مثل /attendance وغيره...
 
 
 
@@ -795,28 +802,45 @@ def delete_semester(id):
 
 @app.route("/attendance")
 def attendance():
+    course_id = request.args.get("course_id")
+    student_id = request.args.get("student_id")
+
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute("""
+
+    query = """
         SELECT a.id, s.full_name, c.course_name, a.attendance_date, a.status
         FROM attendance a
         JOIN students s ON a.student_id = s.id
         JOIN courses c ON a.course_id = c.id
-        ORDER BY a.attendance_date DESC
-    """)
+    """
+    filters = []
+    params = []
+
+    if course_id:
+        filters.append("a.course_id = %s")
+        params.append(course_id)
+    if student_id:
+        filters.append("a.student_id = %s")
+        params.append(student_id)
+
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+
+    query += " ORDER BY a.attendance_date DESC"
+
+    cursor.execute(query, params)
     rows = cursor.fetchall()
     cursor.close()
     db.close()
 
-    attendance = []
-    for row in rows:
-        attendance.append({
-            'id': row[0],
-            'student_name': row[1],
-            'course_name': row[2],
-            'date': row[3],
-            'status': row[4]
-        })
+    attendance = [{
+        'id': row[0],
+        'student_name': row[1],
+        'course_name': row[2],
+        'date': row[3],
+        'status': row[4]
+    } for row in rows]
 
     return render_template("attendance.html", attendance=attendance)
 
