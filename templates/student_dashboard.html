@@ -4,37 +4,106 @@
   <meta charset="UTF-8">
   <title>واجهة الطالب</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body {
+      direction: rtl;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+      background-image: url('/static/خلفية 2.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+    }
+
+    h2 {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #333;
+      background-color: rgba(255,255,255,0.7);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 18px;
+    }
+
+    .form-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 260px;
+    }
+
+    form {
+      background-color: rgba(255,255,255,0.85);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      width: 320px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0077b6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #005f8e;
+    }
+  </style>
 </head>
 <body>
   <h2>مرحبًا {{ session.student_name }}</h2>
 
-  <form method="GET" action="/student_courses">
-    <label>السنة:</label>
-    <select name="year_id">
-      {% for year in years %}
-      <option value="{{ year[0] }}">{{ year[1] }}</option>
-      {% endfor %}
-    
-    </select><br><br>
+  <div class="form-container">
+    <form method="GET" action="/student_courses">
+      <label>السنة:</label>
+      <select name="year_id">
+        {% for year in years %}
+        <option value="{{ year[0] }}">{{ year[1] }}</option>
+        {% endfor %}
+      </select>
 
-    <label>القسم:</label>
-    <select name="department_id">
-      <option value="">(اختياري)</option>
-      {% for dep in departments %}
-      <option value="{{ dep[0] }}">{{ dep[1] }}</option>
-      {% endfor %}
+      <label>القسم:</label>
+      <select name="department_id">
+        <option value="">(اختياري)</option>
+        {% for dep in departments %}
+        <option value="{{ dep[0] }}">{{ dep[1] }}</option>
+        {% endfor %}
+      </select>
 
-    </select><br><br>
+      <label>الفصل:</label>
+      <select name="semester_id">
+        {% for sem in semesters %}
+        <option value="{{ sem[0] }}">{{ sem[1] }}</option>
+        {% endfor %}
+      </select>
 
-    <label>الفصل:</label>
-    <select name="semester_id">
-      {% for sem in semesters %}
-      <option value="{{ sem[0] }}">{{ sem[1] }}</option>
-      {% endfor %}
-
-    </select><br><br>
-
-    <button type="submit">عرض المواد</button>
-  </form>
+      <button type="submit">عرض المواد</button>
+    </form>
+  </div>
 </body>
 </html>

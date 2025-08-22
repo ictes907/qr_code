@@ -3,20 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <title>المواد المتاحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
+  <style>
+    body {
+      direction: rtl;
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-image: url('/static/خلفية 2.jpg'); /* ضع اسم صورة الخلفية هنا */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.85);
+      margin: 80px auto;
+      padding: 30px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 600px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #0077b6;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    a {
+      color: #0077b6;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    p {
+      text-align: center;
+      font-size: 18px;
+      background-color: rgba(255,255,255,0.7);
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
-  <h2>المواد المتاحة:</h2>
-  {% if courses %}
-    <ul>
-      {% for course in courses %}
-        <li>
-          {{ course.course_name }} —
-          <a href="/scan_qr?course_id={{ course.id }}">تسجيل الحضور</a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>لا توجد مواد مطابقة للخيارات المحددة.</p>
-  {% endif %}
+  <div class="container">
+    <h2>المواد المتاحة:</h2>
+    {% if courses %}
+      <ul>
+        {% for course in courses %}
+          <li>
+            {{ course.course_name }} —
+            <a href="/scan_qr?course_id={{ course.id }}">تسجيل الحضور</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>لا توجد مواد مطابقة للخيارات المحددة.</p>
+    {% endif %}
+  </div>
 </body>
 </html>

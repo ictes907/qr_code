@@ -4,15 +4,42 @@
     <meta charset="UTF-8">
     <title>مسح رمز الحضور</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #0077b6;
+        }
+
+        #reader {
+            width: 300px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            background-color: #fff;
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
     <h2>📷 امسح رمز QR لتسجيل حضورك</h2>
-    <div id="reader" style="width:300px;"></div>
+    <div id="reader"></div>
 
     <script>
         function onScanSuccess(decodedText, decodedResult) {
             console.log(`✅ رمز تم مسحه: ${decodedText}`);
-            window.location.href = decodedText;  // يفتح رابط الحضور مباشرة
+            window.location.href = decodedText;
         }
 
         function onScanFailure(error) {

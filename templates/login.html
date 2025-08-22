@@ -9,9 +9,16 @@
   <style>
     body {
       font-family: 'Tahoma', sans-serif;
-      background-color: #f4f4f4;
       margin: 0;
       padding: 0;
+      background-image: url('/static/خلفية 4.png'); /* صورة الخلفية */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     header img {
@@ -21,39 +28,41 @@
       width: 70px;
       height: 70px;
       border-radius: 50%;
+      z-index: 2;
     }
 
     .login-container {
-      width: 320px;
-      margin: 130px auto;
-      background-color: #fff;
-      border: 2px solid #007bff;
+      width: 350px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border: none; /* إزالة الحواف الزرقاء */
       border-radius: 10px;
       padding: 30px 25px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      margin-top: 60px; /* رفع المستطيل للأعلى */
     }
 
     .login-container h2 {
       text-align: center;
       margin-bottom: 25px;
-      color: #333;
+      color: #000; /* العنوان باللون الأسود */
     }
 
     input[type="text"],
     input[type="password"] {
       width: 100%;
+      box-sizing: border-box;
       padding: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 15px;
       border: 1px solid #ccc;
       border-radius: 5px;
+      font-size: 16px;
     }
 
     .password-wrapper {
       position: relative;
     }
 
-    .password-wrapper input[type="password"],
-    .password-wrapper input[type="text"] {
+    .password-wrapper input {
       padding-right: 40px;
     }
 
@@ -63,18 +72,19 @@
       left: 10px;
       transform: translateY(-50%);
       cursor: pointer;
-      font-size: 16px;
-      color: #007bff;
+      font-size: 18px;
+      color: #555;
     }
 
     button {
       width: 100%;
       padding: 10px;
-      background-color: #007bff;
+      background-color: #888; /* الزر باللون الرمادي */
       border: none;
       color: #fff;
       font-weight: bold;
       border-radius: 5px;
+      font-size: 16px;
       cursor: pointer;
     }
 
@@ -87,6 +97,7 @@
       color: #007bff;
       text-decoration: none;
     }
+
     .shake {
       animation: shake 0.4s;
     }
@@ -99,7 +110,6 @@
       80% { transform: translateX(5px); }
       100% { transform: translateX(0); }
     }
-
   </style>
 </head>
 <body>
@@ -110,28 +120,21 @@
   </header>
 
   <!-- واجهة تسجيل الدخول -->
-  <div class="login-container">
+  <div class="login-container {% if error %}shake{% endif %}">
     <h2>تسجيل دخول المدرسين</h2>
     <form action="/login" method="post">
-
-
-        <input type="text" name="university_id" placeholder="الرقم الجامعي" value="">
-      <div class="password-wrapper">
-        <input type="password" name="password" placeholder="كلمة المرور" id="password">
+      <input type="text" name="university_id" placeholder="الرقم الجامعي" required>
       
+      <div class="password-wrapper">
+        <input type="password" name="password" placeholder="كلمة المرور" id="password" required>
         <span class="toggle-eye" onclick="togglePassword()">👁️</span>
       </div>
-         
-         
 
-         <button type="submit"><p> دخول<a href="/dashboard"> </a></p></button>
-         
+      <button type="submit">دخول</button>
     </form>
 
     <div class="signup-link">
       <p>ليس لديك حساب؟ <a href="/register">إضافة حساب جديد</a></p>
-     
-
     </div>
   </div>
 
@@ -145,4 +148,3 @@
   </script>
 </body>
 </html>
-

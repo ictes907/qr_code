@@ -11,8 +11,8 @@
     }
 
     header {
-      background-color: #007bff;
-      color: #fff;
+      background-color: #e0e0e0; /* رمادي فاتح بدل الأزرق */
+      color: #333;
       padding: 15px 30px;
       display: flex;
       align-items: center;
@@ -35,11 +35,21 @@
       padding: 25px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      position: relative;
     }
 
     .teacher-box h2 {
       margin-bottom: 20px;
-      color: #007bff;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .teacher-box h2 img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
     }
 
     .teacher-box p {
@@ -56,7 +66,7 @@
     }
 
     .nav-box h3 {
-      color: #007bff;
+      color: #333;
       margin-bottom: 15px;
     }
 
@@ -72,28 +82,28 @@
     .nav-box a:hover {
       background-color: #f0f0f0;
     }
+
     .logout-btn {
-  margin-top: 40px;
-  display: block;
-  padding: 12px;
-  background-color: #dc3545;
-  color: #fff;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
-  transition: background 0.2s;
-}
+      margin-top: 40px;
+      display: block;
+      padding: 12px;
+      background-color: #888; /* رمادي */
+      color: #fff; /* خط أبيض */
+      text-align: center;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
 
-.logout-btn:hover {
-  background-color: #c82333;
-}
-
+    .logout-btn:hover {
+      background-color: #666;
+    }
   </style>
 </head>
 <body>
 
-  <!-- رأس الصفحة مع لوغو الجامعة -->
+  <!-- رأس الصفحة -->
   <header>
     <h1>لوحة تحكم المدرّس</h1>
     <img src="/static/university_logo.png" alt="شعار الجامعة">
@@ -103,7 +113,9 @@
 
     <!-- معلومات المدرّس -->
     <div class="teacher-box">
-      <h2>معلومات المدرّس</h2>
+      <h2>
+        <img src="/static/لوغو.png" alt="لوغو المدرّس"> معلومات المدرّس
+      </h2>
       <p><strong>الاسم:</strong> {{ teacher['full_name'] }}</p>
       <p><strong>الرقم الجامعي:</strong> {{ teacher['university_id'] }}</p>
       <p><strong>المؤهل العلمي:</strong> {{ teacher['education_level'] }}</p>
@@ -122,9 +134,7 @@
       <a href="/years">📆 جدول السنوات</a>
       <a href="/teachers">👨‍🏫 جدول المدرّسين</a>
       <hr style="margin: 25px 0;">
-       <a href="/logout" class="logout-btn">🚪 تسجيل الخروج</a>
-
-
+      <a href="/logout" class="logout-btn">🚪 تسجيل الخروج</a>
     </div>
 
   </div>
