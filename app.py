@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from neon_conn import get_neon_connection as get_db_connection
 from qr_generator import generate_qr_for_course
 import psycopg2
-import sqlite3
 import pymysql
 import qrcode
 import pandas as pd
@@ -30,7 +29,7 @@ def generate_qr_for_course(course_id, course_name, department_id, year_id, semes
 @app.route("/generate_qr_for_courses")
 def generate_qr_for_courses():
     try:
-        conn = get_neon_connection()
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # جلب المواد التي لا تحتوي على QR
@@ -85,7 +84,7 @@ def attend():
     if not course_id:
         return "❌ المعرف غير موجود"
 
-    conn = get_neon_connection()
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -571,30 +570,43 @@ def show_courses():
     return render_template('courses.html', courses=courses)
 
 
-
-
-
-
-
-
-
-@app.route('/add_course', methods=['POST'])
+@app.route("/add_course", methods=["POST"])
 def add_course():
-    course_name = request.form['course_name']
-    department_id = request.form['department_id']
-    year_id = request.form['year_id']
-    semester_id = request.form['semester_id']
+    course_name = request.form["course_name"]
+    department_id = request.form["department_id"]
+    year_id = request.form["year_id"]
+    semester_id = request.form["semester_id"]
 
-    conn = get_db_connection()
+    conn = get_neon_connection()
     cursor = conn.cursor()
+
+    # إضافة المادة إلى قاعدة البيانات
     cursor.execute("""
         INSERT INTO courses (course_name, department_id, year_id, semester_id)
-        VALUES (%s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s) RETURNING id
     """, (course_name, department_id, year_id, semester_id))
+    course_id = cursor.fetchone()[0]
     conn.commit()
+
+    # توليد رمز QR تلقائي
+    qr_url = f"https://qr-code-7jof.onrender.com/confirm_attendance?course_id={course_id}"
+    img = qrcode.make(qr_url)
+
+    qr_folder = "static/qrcodes"
+    os.makedirs(qr_folder, exist_ok=True)
+    qr_path = f"{qr_folder}/course_{course_id}.png"
+    img.save(qr_path)
+
+    # تحديث مسار الصورة في قاعدة البيانات
+    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_path, course_id))
+    conn.commit()
+
+    cursor.close()
     conn.close()
 
-    return redirect('/courses')
+    return redirect("/courses")
+
+
 
 @app.route('/edit_course/<int:id>', methods=['POST'])
 def edit_course(id):
