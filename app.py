@@ -304,6 +304,8 @@ def departments():
     departments = cursor.fetchall()
     cursor.close()
     db.close()
+    print(rows)
+
     return render_template("departments.html", departments=departments)
 
 @app.route("/add_department", methods=["POST"])
@@ -389,17 +391,16 @@ def delete_year(id):
     db.close()
     return redirect("/years")
 
-
-   
-@app.route("/courses")
-def courses():
-    db = get_db_connection()
-    cursor = db.cursor()
+@app.route('/courses')
+def show_courses():
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM courses")
-    courses_list = cursor.fetchall()
+    courses = cursor.fetchall()
     cursor.close()
-    db.close()
-    return render_template("courses.html", courses=courses_list)
+    conn.close()
+    return render_template('courses.html', courses=courses)
+
 
 
 

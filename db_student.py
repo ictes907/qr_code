@@ -1,5 +1,17 @@
 import psycopg2
 from neon_conn import get_neon_connection as get_db_connection
+import psycopg2
+
+def get_neon_connection():
+ return psycopg2.connect(
+    host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
+    database="neondb",
+    user="neondb_owner",
+    password="npg_2ogfihcX5JEO",
+    port=5432,
+    sslmode="require"
+)
+
 
 def get_all_students():
     conn = get_db_connection()

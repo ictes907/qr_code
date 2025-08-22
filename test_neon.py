@@ -1,0 +1,16 @@
+import psycopg2
+
+try:
+    conn = psycopg2.connect(
+            host="ep-withered-snow-aeck2exl-pooler.c-2.us-east-2.aws.neon.tech",
+            database="neondb",
+            user="neondb_owner",
+            password="npg_2ogfihcX5JEO",
+            port=5432,
+            sslmode="require"
+
+    )
+    print("الاتصال بـ Neon تم بنجاح ✔️")
+
+except Exception as e:
+    print("❌ فشل الاتصال:", e)
