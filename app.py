@@ -188,15 +188,7 @@ def student_courses():
     if not (year_id and department_id and semester_id):
         return "المعطيات ناقصة", 400
 
-    # الاتصال بقاعدة البيانات باستخدام DictCursor
-    db = pymysql.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="your_database_name",
-        cursorclass=pymysql.cursors.DictCursor
-    )
-
+    # استخدام الاتصال الموجود مسبقًا
     with db.cursor() as cursor:
         cursor.execute("""
             SELECT id, course_name, qr_code
@@ -204,8 +196,6 @@ def student_courses():
             WHERE year_id = %s AND department_id = %s AND semester_id = %s
         """, (year_id, department_id, semester_id))
         courses = cursor.fetchall()
-
-    db.close()
 
     return render_template("student_courses.html", courses=courses)
 

@@ -69,11 +69,15 @@
     {% if courses %}
       <ul>
         {% for course in courses %}
-          <li>
-            {{ course.course_name }} —
-            <a href="/scan_qr?course_id={{ course.id }}">تسجيل الحضور</a>
-          </li>
-        {% endfor %}
+        <li>
+          <ul>
+               <strong>{{ course.course_name }}</strong><br>
+                <a href="/scan_qr?course_id={{ course.id }}">📷 تسجيل الحضور</a>
+              </li>
+            {% endfor %}
+          </ul>
+          
+      
       </ul>
     {% else %}
       <p>لا توجد مواد مطابقة للخيارات المحددة.</p>
