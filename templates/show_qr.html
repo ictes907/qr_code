@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head><title>QR Codes</title></head>
+<body>
+  <h2>الرموز المولدة:</h2>
+  {% for path in qr_paths %}
+    <img src="{{ path }}" alt="QR Code" style="width:200px; margin:10px;">
+  {% endfor %}
+</body>
+</html>

@@ -19,40 +19,46 @@ QR_FOLDER = "static/qrcodes"
 os.makedirs(QR_FOLDER, exist_ok=True)
 
 def generate_qr_for_course(course_id, course_name, department_id, year_id, semester_id):
-    qr_data = f"Course: {course_name}\nDepartment: {department_id}\nYear: {year_id}\nSemester: {semester_id}"
+    qr_data = f"https://qr-code-7jof.onrender.com/confirm_attendance?course_id={course_id}"
     qr = qrcode.make(qr_data)
 
-    filename = f"{QR_FOLDER}/course_{course_id}.png"
+    filename = f"static/qrcodes/course_{course_id}.png"
     qr.save(filename)
     return filename
 
-# هنا تكتب كل الراوتات والدوال
 
 @app.route("/generate_qr_for_courses")
 def generate_qr_for_courses():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT id, course_name, department_id, year_id, semester_id
-        FROM courses
-        WHERE qr_code IS NULL OR qr_code = ''
-    """)
+    connection = pymysql.connect(host="localhost", user="root", password="", database="your_db")
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT * FROM courses")
     courses = cursor.fetchall()
 
+    qr_paths = []
     for course in courses:
-        course_id, name, dept, year, semester = course
-        qr_path = generate_qr_for_course(course_id, name, dept, year, semester)
+        path = generate_qr_for_course(
+            course["id"],
+            course["name"],
+            course["department_id"],
+            course["year_id"],
+            course["semester_id"]
+        )
+        qr_paths.append(path)
 
-        cursor.execute("""
-            UPDATE courses SET qr_code = %s WHERE id = %s
-        """, (qr_path, course_id))
+    connection.close()
+    return jsonify({"qr_codes": qr_paths})
 
-    conn.commit()
-    cursor.close()
-    conn.close()
 
-    return redirect("/courses")
+
+@app.route("/show_qr_codes")
+def show_qr_codes():
+    qr_files = os.listdir(QR_FOLDER)
+    qr_paths = [os.path.join(QR_FOLDER, file) for file in qr_files]
+    return render_template("show_qr.html", qr_paths=qr_paths)
+
+# هنا تكتب كل الراوتات والدوال
+
+
 
 
 
