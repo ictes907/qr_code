@@ -297,19 +297,29 @@ def login():
 
 
 
-@app.route("/dashboard")
+@app.route('/dashboard')
 def dashboard():
-    if "teacher_id" not in session:
-        return redirect("/login")
+    if 'teacher_id' not in session:
+        return redirect('/login')
 
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute("SELECT full_name FROM teachers WHERE id = %s", (session["teacher_id"],))
-    teacher = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT full_name, university_id, education_level, department_id, year_id
+        FROM teachers
+        WHERE id = %s
+    """, (session["teacher_id"],))
+
+    columns = [desc[0] for desc in cursor.description]
+    data = cursor.fetchone()
+    teacher = dict(zip(columns, data))
+
     cursor.close()
     db.close()
 
     return render_template("dashboard.html", teacher=teacher)
+
 
 
 @app.route("/students")
@@ -708,15 +718,19 @@ def register_teacher():
 
         db = get_db_connection()
         cursor = db.cursor()
+
+        # التحقق من وجود الرقم الجامعي مسبقًا
         cursor.execute("SELECT id FROM teachers WHERE university_id = %s", (university_id,))
         if cursor.fetchone():
             cursor.close()
             db.close()
             return render_template("register.html", error="الرقم الجامعي مسجّل مسبقًا")
 
+        # إدخال بيانات المدرّس الجديد
         cursor.execute(
             "INSERT INTO teachers (full_name, university_id, education_level, password, department_id, year_ids) VALUES (%s, %s, %s, %s, %s, %s)",
-            (full_name, university_id, education_level, password, department_id, year_ids))
+            (full_name, university_id, education_level, password, department_id, year_ids)
+        )
         db.commit()
         cursor.close()
         db.close()
@@ -724,16 +738,22 @@ def register_teacher():
         session["last_user"] = {"university_id": university_id, "password": password}
         return redirect("/login")
 
-    # تحميل الأقسام والسنوات لعرضها بالتسجيل
+    # تحميل الأقسام والسنوات لعرضها في واجهة التسجيل
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM departments")
-    departments = cursor.fetchall()
-    cursor.execute("SELECT * FROM years")
-    years = cursor.fetchall()
+
+    # استعلام فقط عن id لأن الجداول لا تحتوي على name
+    cursor.execute("SELECT id FROM departments")
+    departments = [{"id": row[0]} for row in cursor.fetchall()]
+
+    cursor.execute("SELECT id FROM years")
+    years = [{"id": row[0]} for row in cursor.fetchall()]
+
     cursor.close()
     db.close()
+
     return render_template("register.html", departments=departments, years=years)
+
 
 
 
@@ -912,7 +932,6 @@ def confirm_attendance():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # تحقق من عدم تكرار الحضور بنفس اليوم
     today = datetime.now().date()
     cursor.execute("""
         SELECT id FROM attendance
@@ -920,19 +939,30 @@ def confirm_attendance():
     """, (student_id, course_id, today))
     existing = cursor.fetchone()
     if existing:
-        cursor.close()
-        conn.close()
-        return "✅ تم تسجيل حضورك مسبقًا اليوم"
+       # جلب بيانات المادة والطالب حتى لو الحضور مسجل مسبقًا
+       cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
+    course_row = cursor.fetchone()
+    course_name = course_row[0] if course_row else "مادة غير معروفة"
 
-    # حفظ الحضور
+    cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
+    student_row = cursor.fetchone()
+    student_name = student_row[0] if student_row else "طالب غير معروف"
+
+    cursor.close()
+    conn.close()
+
+    return render_template("attendance_success.html",
+                           course_name=course_name,
+                           student_name=student_name,
+                           time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+
     cursor.execute("""
         INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
         VALUES (%s, %s, %s, %s, %s)
     """, (student_id, course_id, today, datetime.now().time(), 'حاضر'))
-
     conn.commit()
 
-    # جلب بيانات المادة والطالب
     cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
     course_row = cursor.fetchone()
     course_name = course_row[0] if course_row else "مادة غير معروفة"

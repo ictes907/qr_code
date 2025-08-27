@@ -9,6 +9,9 @@
       margin: 8px 0;
       width: 100%;
     }
+    select[multiple] {
+      height: 120px;
+    }
     .container {
       width: 400px;
       margin: 40px auto;
@@ -29,16 +32,18 @@
       <input type="password" name="password" placeholder="كلمة المرور" required>
 
       <select name="department_id" required>
-        <option disabled selected>اختر القسم</option>
+        <option value="">اختر القسم</option>
         {% for dept in departments %}
-        <option value="{{ dept.id }}">{{ dept.department_name }}</option>
+          <option value="{{ dept.id }}">{{ dept.id }}</option>
         {% endfor %}
       </select>
 
-      <label>اختر السنوات التي تدرّسها:</label>
-      {% for year in years %}
-        <input type="checkbox" name="year_ids" value="{{ year.id }}"> {{ year.year_name }}<br>
-      {% endfor %}
+      <label for="year_ids">اختر السنوات:</label>
+      <select name="year_ids" multiple required>
+        {% for year in years %}
+          <option value="{{ year.id }}">{{ year.id }}</option>
+        {% endfor %}
+      </select>
 
       <button type="submit">تسجيل الحساب</button>
     </form>

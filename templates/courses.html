@@ -21,7 +21,7 @@
       text-align: center;
     }
     th {
-      background-color: #007bff;
+      background-color: #6c757d;
       color: #fff;
     }
     tr:nth-child(even) {
@@ -36,7 +36,7 @@
 </head>
 <body>
 
-  <a href="/export_courses" class="export-btn" title="تصدير إلى Excel">🟩📄</a>
+  <a href="/export_courses" class="export-btn" title="تصدير إلى Excel" style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">📤</a>
 
   <form method="get" action="/courses" style="margin-bottom: 20px;">
     <input type="text" name="search_name" placeholder="ابحث باسم المادة">
@@ -46,34 +46,16 @@
   <h1>📌 جدول المواد</h1>
   <table>
     <tr>
+      <th>الإجراءات</th>
       <th>اسم المادة</th>
       <th>القسم</th>
       <th>الفصل الدراسي</th>
       <th>السنة</th>
       <th>QR Code</th>
-      <th>إجراءات</th>
     </tr>
     {% for course in courses %}
     <tr>
-      <td>{{ course.course_name }}</td>
-      <td>{{ course.department_id }}</td>
-      <td>{{ course.semester_id }}</td>
-      <td>{{ course.year_id }}</td>
       <td>
-        <td>
-          {% if course.qr_code %}
-          <img src="{{ url_for('static', filename=course.qr_code.split('static/')[1]) }}" width="100">
-        {% else %}
-          لا يوجد رمز
-        {% endif %}
-        
-        </td>
-        
-      
-      <td>
-        <form action="/delete_course/{{ course.id }}" method="get" style="display:inline;">
-          <button type="submit">🗑 حذف</button>
-        </form>
         <form action="/edit_course/{{ course.id }}" method="post" style="display:inline;">
           <input type="text" name="course_name" value="{{ course.course_name }}" required>
           <input type="number" name="department_id" value="{{ course.department_id }}" required>
@@ -81,6 +63,20 @@
           <input type="number" name="semester_id" value="{{ course.semester_id }}" required>
           <button type="submit">✏ تعديل</button>
         </form>
+        <form action="/delete_course/{{ course.id }}" method="get" style="display:inline;">
+          <button type="submit">🗑 حذف</button>
+        </form>
+      </td>
+      <td>{{ course.course_name }}</td>
+      <td>{{ course.department_id }}</td>
+      <td>{{ course.semester_id }}</td>
+      <td>{{ course.year_id }}</td>
+      <td>
+        {% if course.qr_code %}
+          <img src="{{ url_for('static', filename=course.qr_code.split('static/')[1]) }}" width="100" alt="QR Code">
+        {% else %}
+          لا يوجد رمز
+        {% endif %}
       </td>
     </tr>
     {% endfor %}
