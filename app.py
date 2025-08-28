@@ -179,32 +179,33 @@ def student_courses():
     if "student_id" not in session:
         return redirect("/")
 
-    # استلام البيانات من الرابط
     year_name = request.args.get("year_name")
     department_name = request.args.get("department_name")
     semester_name = request.args.get("semester_name")
 
+    print("📌 السنة:", year_name)
+    print("📌 القسم:", department_name)
+    print("📌 الفصل:", semester_name)
 
-
-    # الاتصال بقاعدة البيانات
     db = get_db_connection()
     cursor = db.cursor()
 
-    # استعلام المواد المطابقة حسب الأسماء
     cursor.execute("""
         SELECT course_name, qr_code
         FROM courses
-        WHERE year_name = %s AND department_name = %s AND semester_name = %s
-    """, (year_name, department_name, semester_name))
+        WHERE TRIM(year_name) = %s AND TRIM(department_name) = %s AND TRIM(semester_name) = %s
+    """, (year_name.strip(), department_name.strip(), semester_name.strip()))
 
-    # تحويل النتائج إلى قواميس
     courses = [{"course_name": row[0], "qr_code": row[1]} for row in cursor.fetchall()]
 
     cursor.close()
     db.close()
 
-    # تمرير البيانات إلى القالب
+    if not courses:
+        return render_template("student_courses.html", courses=[], error="❌ لا توجد مواد مطابقة للخيارات المحددة.")
+
     return render_template("student_courses.html", courses=courses)
+
 
 
 
