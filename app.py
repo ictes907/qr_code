@@ -973,7 +973,6 @@ def delete_attendance(id):
 
 
 
-
 @app.route("/confirm_attendance")
 def confirm_attendance():
     course_id = request.args.get('course_id')
@@ -987,30 +986,41 @@ def confirm_attendance():
 
     today = datetime.now().date()
 
-    # تحقق إذا الحضور مسجل مسبقًا
-    cursor.execute("""
-        SELECT id FROM attendance
-        WHERE student_id = %s AND course_id = %s AND attendance_date = %s
-    """, (student_id, course_id, today))
-    existing = cursor.fetchone()
-
-    if not existing:
-        # تسجيل الحضور إذا لم يكن مسجل
-        cursor.execute("""
-            INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (student_id, course_id, today, datetime.now().time(), 'حاضر'))
-        conn.commit()
-
     # جلب اسم المادة
-    cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
+    cursor.execute("SELECT course_name, department_name, year_name, semester_name FROM courses WHERE id = %s", (course_id,))
     course_row = cursor.fetchone()
-    course_name = course_row[0] if course_row else "مادة غير معروفة"
+    if not course_row:
+        return "❌ المادة غير موجودة"
+    course_name, department_name, year_name, semester_name = course_row
 
     # جلب اسم الطالب
     cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
     student_row = cursor.fetchone()
-    student_name = student_row[0] if student_row else "طالب غير معروف"
+    if not student_row:
+        return "❌ الطالب غير موجود"
+    student_name = student_row[0]
+
+    # تحقق إذا الحضور مسجل مسبقًا
+    cursor.execute("""
+        SELECT id FROM attendance
+        WHERE student_name = %s AND course_name = %s AND attendance_date = %s
+    """, (student_name, course_name, today))
+    existing = cursor.fetchone()
+
+    if not existing:
+        # تسجيل الحضور
+        cursor.execute("""
+            INSERT INTO attendance (
+                student_name, course_name, department_name,
+                year_name, semester_name, attendance_date,
+                attendance_time, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            student_name, course_name, department_name,
+            year_name, semester_name, today,
+            datetime.now().time(), 'حاضر'
+        ))
+        conn.commit()
 
     cursor.close()
     conn.close()
@@ -1019,6 +1029,7 @@ def confirm_attendance():
                            course_name=course_name,
                            student_name=student_name,
                            time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
 
