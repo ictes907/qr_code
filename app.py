@@ -181,16 +181,26 @@ def student_courses():
 
     # استلام البيانات من الرابط
     year_name = request.args.get("year_name", "").strip()
-    department_name = request.args.get("department_name", "").strip()
+    department_id = request.args.get("department_id", "").strip()
     semester_name = request.args.get("semester_name", "").strip()
 
-    # التحقق من وجود القيم الثلاثة بعد التنظيف
-    if not year_name or not department_name or not semester_name:
+    # التحقق من وجود القيم الثلاثة
+    if not year_name or not department_id or not semester_name:
         return render_template("student_courses.html", courses=[], error="❌ البيانات المطلوبة غير مكتملة")
 
     # الاتصال بقاعدة البيانات
     db = get_db_connection()
     cursor = db.cursor()
+
+    # جلب اسم القسم من جدول الأقسام
+    cursor.execute("SELECT department_name FROM departments WHERE id = %s", (department_id,))
+    result = cursor.fetchone()
+    if not result:
+        cursor.close()
+        db.close()
+        return render_template("student_courses.html", courses=[], error="❌ القسم غير موجود")
+
+    department_name = result[0]
 
     # استعلام المواد المطابقة حسب الأسماء
     cursor.execute("""
@@ -199,14 +209,13 @@ def student_courses():
         WHERE TRIM(year_name) = %s AND TRIM(department_name) = %s AND TRIM(semester_name) = %s
     """, (year_name, department_name, semester_name))
 
-    # تحويل النتائج إلى قواميس
     courses = [{"course_name": row[0], "qr_code": row[1]} for row in cursor.fetchall()]
 
     cursor.close()
     db.close()
 
-    # عرض النتائج أو رسالة فارغة
     return render_template("student_courses.html", courses=courses)
+
 
 
 
