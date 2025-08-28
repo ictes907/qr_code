@@ -179,32 +179,36 @@ def student_courses():
     if "student_id" not in session:
         return redirect("/")
 
-    year_name = request.args.get("year_name")
-    department_name = request.args.get("department_name")
-    semester_name = request.args.get("semester_name")
+    # استلام البيانات من الرابط
+    year_name = request.args.get("year_name", "").strip()
+    department_name = request.args.get("department_name", "").strip()
+    semester_name = request.args.get("semester_name", "").strip()
 
-    print("📌 السنة:", year_name)
-    print("📌 القسم:", department_name)
-    print("📌 الفصل:", semester_name)
+    # التحقق من وجود القيم الثلاثة بعد التنظيف
+    if not year_name or not department_name or not semester_name:
+        return render_template("student_courses.html", courses=[], error="❌ البيانات المطلوبة غير مكتملة")
 
+    # الاتصال بقاعدة البيانات
     db = get_db_connection()
     cursor = db.cursor()
 
+    # استعلام المواد المطابقة حسب الأسماء
     cursor.execute("""
         SELECT course_name, qr_code
         FROM courses
         WHERE TRIM(year_name) = %s AND TRIM(department_name) = %s AND TRIM(semester_name) = %s
-    """, (year_name.strip(), department_name.strip(), semester_name.strip()))
+    """, (year_name, department_name, semester_name))
 
+    # تحويل النتائج إلى قواميس
     courses = [{"course_name": row[0], "qr_code": row[1]} for row in cursor.fetchall()]
 
     cursor.close()
     db.close()
 
-    if not courses:
-        return render_template("student_courses.html", courses=[], error="❌ لا توجد مواد مطابقة للخيارات المحددة.")
-
+    # عرض النتائج أو رسالة فارغة
     return render_template("student_courses.html", courses=courses)
+
+
 
 
 
