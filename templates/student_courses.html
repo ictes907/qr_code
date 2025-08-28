@@ -10,7 +10,7 @@
       font-family: 'Cairo', sans-serif;
       margin: 0;
       padding: 0;
-      background-image: url('/static/خلفية 2.jpg'); /* ضع اسم صورة الخلفية هنا */
+      background-image: url('/static/خلفية 2.jpg');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -42,6 +42,9 @@
     li {
       margin-bottom: 15px;
       font-size: 18px;
+      background-color: rgba(255,255,255,0.7);
+      padding: 10px;
+      border-radius: 8px;
     }
 
     a {
@@ -65,20 +68,15 @@
 </head>
 <body>
   <div class="container">
-    <p><strong>المواد المتاحة :</strong> {{ course['course_name'] }}</p>
-    
+    <h2>📘 المواد المتاحة</h2>
+
     {% if courses %}
       <ul>
         {% for course in courses %}
         <li>
-          <ul>
-               <strong>{{ course.course_name }}</strong><br>
-                <a href="/scan_qr?course_id={{ course.id }}">📷 تسجيل الحضور</a>
-              </li>
-            {% endfor %}
-          </ul>
-          
-      
+          📷 <a href="/scan_qr?course_id={{ course.id }}">تسجيل الحضور لمادة {{ course.course_name }}</a>
+        </li>
+        {% endfor %}
       </ul>
     {% else %}
       <p>لا توجد مواد مطابقة للخيارات المحددة.</p>
