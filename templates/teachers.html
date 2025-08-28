@@ -49,18 +49,16 @@
       <th>الاسم الثلاثي</th>
       <th>الرقم الجامعي</th>
       <th>المؤهل العلمي</th>
-      <th>القسم</th>
-      <th>السنين التي يدرّسها</th>
-      <th>السنة</th>
+      <th>كلمة المرور</th>
+    
     </tr>
     {% for teacher in teachers %}
     <tr>
       <td>{{ teacher.full_name }}</td>
       <td>{{ teacher.university_id }}</td>
       <td>{{ teacher.education_level }}</td>
-      <td>{{ teacher.department_name if teacher.department_name else 'غير مخصص' }}</td>
-      <td>{{ teacher.year_name if teacher.year_name else '—' }}</td>
-      <td>{{ teacher.year }}</td>
+      <td>{{ teacher.password}}</td>
+     
     </tr>
     {% endfor %}
   </table>

@@ -306,7 +306,7 @@ def dashboard():
     cursor = db.cursor()
 
     cursor.execute("""
-        SELECT full_name, university_id, education_level, department_id, year_id
+        SELECT full_name, university_id, education_level
         FROM teachers
         WHERE id = %s
     """, (session["teacher_id"],))
@@ -671,20 +671,16 @@ def show_teachers():
 
     if search_id:
         cursor.execute("""
-            SELECT t.full_name, t.university_id, t.education_level,
-                   d.department_name, y.year_name, y.id AS year
+            SELECT t.full_name, t.university_id, t.education_level
             FROM teachers t
-            LEFT JOIN departments d ON t.department_id = d.id
-            LEFT JOIN years y ON t.year_id = y.id
+           
             WHERE t.university_id = %s
         """, (search_id,))
     else:
         cursor.execute("""
-            SELECT t.full_name, t.university_id, t.education_level,
-                   d.department_name, y.year_name, y.id AS year
+            SELECT t.full_name, t.university_id, t.education_level
             FROM teachers t
-            LEFT JOIN departments d ON t.department_id = d.id
-            LEFT JOIN years y ON t.year_id = y.id
+            
         """)
 
     rows = cursor.fetchall()
@@ -697,9 +693,7 @@ def show_teachers():
             "full_name": row[0],
             "university_id": row[1],
             "education_level": row[2],
-            "department_name": row[3],
-            "year_name": row[4],
-            "year": row[5]
+            
         })
 
     return render_template("teachers.html", teachers=teachers)
@@ -713,8 +707,6 @@ def register_teacher():
         university_id = request.form["university_id"]
         education_level = request.form["education_level"]
         password = request.form["password"]
-        department_id = request.form["department_id"]
-        year_ids = ",".join(request.form.getlist("year_ids"))
 
         db = get_db_connection()
         cursor = db.cursor()
@@ -727,10 +719,11 @@ def register_teacher():
             return render_template("register.html", error="الرقم الجامعي مسجّل مسبقًا")
 
         # إدخال بيانات المدرّس الجديد
-        cursor.execute(
-            "INSERT INTO teachers (full_name, university_id, education_level, password, department_id, year_ids) VALUES (%s, %s, %s, %s, %s, %s)",
-            (full_name, university_id, education_level, password, department_id, year_ids)
-        )
+        cursor.execute("""
+            INSERT INTO teachers (full_name, university_id, education_level, password)
+            VALUES (%s, %s, %s, %s)
+        """, (full_name, university_id, education_level, password))
+
         db.commit()
         cursor.close()
         db.close()
@@ -738,21 +731,10 @@ def register_teacher():
         session["last_user"] = {"university_id": university_id, "password": password}
         return redirect("/login")
 
-    # تحميل الأقسام والسنوات لعرضها في واجهة التسجيل
-    db = get_db_connection()
-    cursor = db.cursor()
+    # عرض صفحة التسجيل بدون تحميل بيانات إضافية
+    return render_template("register.html")
 
-    # استعلام فقط عن id لأن الجداول لا تحتوي على name
-    cursor.execute("SELECT id FROM departments")
-    departments = [{"id": row[0]} for row in cursor.fetchall()]
 
-    cursor.execute("SELECT id FROM years")
-    years = [{"id": row[0]} for row in cursor.fetchall()]
-
-    cursor.close()
-    db.close()
-
-    return render_template("register.html", departments=departments, years=years)
 
 
 

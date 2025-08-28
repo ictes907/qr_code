@@ -31,20 +31,9 @@
       <input type="text" name="education_level" placeholder="المؤهل العلمي" required>
       <input type="password" name="password" placeholder="كلمة المرور" required>
 
-      <select name="department_id" required>
-        <option value="">اختر القسم</option>
-        {% for dept in departments %}
-          <option value="{{ dept.id }}">{{ dept.id }}</option>
-        {% endfor %}
-      </select>
-
-      <label for="year_ids">اختر السنوات:</label>
-      <select name="year_ids" multiple required>
-        {% for year in years %}
-          <option value="{{ year.id }}">{{ year.id }}</option>
-        {% endfor %}
-      </select>
-
+   
+     
+    
       <button type="submit">تسجيل الحساب</button>
     </form>
   </div>

@@ -65,7 +65,8 @@
 </head>
 <body>
   <div class="container">
-    <h2>المواد المتاحة:</h2>
+    <p><strong>المواد المتاحة :</strong> {{ course['course_name'] }}</p>
+    
     {% if courses %}
       <ul>
         {% for course in courses %}
