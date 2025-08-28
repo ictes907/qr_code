@@ -230,18 +230,9 @@ def student_courses():
 
 
 
-
-
-
-
-
-
 @app.route('/scan_qr')
 def scan_qr():
     return render_template('scan_qr.html')
-
-
-
 
 
 
@@ -981,6 +972,8 @@ def delete_attendance(id):
     return redirect("/attendance")
 
 
+
+
 @app.route("/confirm_attendance")
 def confirm_attendance():
     course_id = request.args.get('course_id')
@@ -1002,18 +995,19 @@ def confirm_attendance():
     existing = cursor.fetchone()
 
     if not existing:
-        # إذا لم يكن مسجل، نسجل الحضور
+        # تسجيل الحضور إذا لم يكن مسجل
         cursor.execute("""
             INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
             VALUES (%s, %s, %s, %s, %s)
         """, (student_id, course_id, today, datetime.now().time(), 'حاضر'))
         conn.commit()
 
-    # جلب بيانات المادة والطالب
+    # جلب اسم المادة
     cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
     course_row = cursor.fetchone()
     course_name = course_row[0] if course_row else "مادة غير معروفة"
 
+    # جلب اسم الطالب
     cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
     student_row = cursor.fetchone()
     student_name = student_row[0] if student_row else "طالب غير معروف"
@@ -1025,6 +1019,7 @@ def confirm_attendance():
                            course_name=course_name,
                            student_name=student_name,
                            time=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
 
