@@ -202,6 +202,11 @@ def student_courses():
 
     department_name = result[0]
 
+    # طباعة القيم للتأكد
+    print("📌 السنة:", year_name)
+    print("📌 القسم:", department_name)
+    print("📌 الفصل:", semester_name)
+
     # استعلام المواد المطابقة حسب الأسماء
     cursor.execute("""
         SELECT course_name, qr_code
@@ -213,6 +218,9 @@ def student_courses():
 
     cursor.close()
     db.close()
+
+    if not courses:
+        return render_template("student_courses.html", courses=[], error="❌ لا توجد مواد مطابقة للخيارات المحددة")
 
     return render_template("student_courses.html", courses=courses)
 
