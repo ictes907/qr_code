@@ -74,7 +74,8 @@
       <ul>
         {% for course in courses %}
         <li>
-          📷 <a href="/scan_qr?course_id={{ course.id }}">تسجيل الحضور لمادة {{ course.course_name }}</a>
+          <a href="/scan_qr?course_name={{ course.course_name }}">تسجيل الحضور لمادة {{ course.course_name }}</a>
+
         </li>
         {% endfor %}
       </ul>

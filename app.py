@@ -174,40 +174,40 @@ def student_dashboard():
                            departments=departments,
                            semesters=semesters)
 
-
 @app.route("/student_courses", methods=["GET"])
 def student_courses():
     if "student_id" not in session:
         return redirect("/")
 
     # استلام البيانات من الرابط
-    year_id = request.args.get("year_id")
-    department_id = request.args.get("department_id")
-    semester_id = request.args.get("semester_id")
+    year_name = request.args.get("year_name")
+    department_name = request.args.get("department_name")
+    semester_name = request.args.get("semester_name")
 
     # التحقق من وجود القيم الثلاثة
-    if not year_id or not department_id or not semester_id:
+    if not year_name or not department_name or not semester_name:
         return "❌ البيانات المطلوبة غير مكتملة"
 
     # الاتصال بقاعدة البيانات
     db = get_db_connection()
     cursor = db.cursor()
 
-    # استعلام المواد المطابقة
+    # استعلام المواد المطابقة حسب الأسماء
     cursor.execute("""
-        SELECT id, course_name, qr_code
+        SELECT course_name, qr_code
         FROM courses
-        WHERE year_id = %s AND department_id = %s AND semester_id = %s
-    """, (year_id, department_id, semester_id))
+        WHERE year_name = %s AND department_name = %s AND semester_name = %s
+    """, (year_name, department_name, semester_name))
 
     # تحويل النتائج إلى قواميس
-    courses = [{"id": row[0], "course_name": row[1], "qr_code": row[2]} for row in cursor.fetchall()]
+    courses = [{"course_name": row[0], "qr_code": row[1]} for row in cursor.fetchall()]
 
     cursor.close()
     db.close()
 
     # تمرير البيانات إلى القالب
     return render_template("student_courses.html", courses=courses)
+
 
 
 
