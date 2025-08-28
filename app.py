@@ -184,9 +184,7 @@ def student_courses():
     department_name = request.args.get("department_name")
     semester_name = request.args.get("semester_name")
 
-    # التحقق من وجود القيم الثلاثة
-    if not year_name or not department_name or not semester_name:
-        return "❌ البيانات المطلوبة غير مكتملة"
+
 
     # الاتصال بقاعدة البيانات
     db = get_db_connection()
