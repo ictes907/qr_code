@@ -562,13 +562,25 @@ def show_courses():
 
     if search_name:
         cursor.execute("""
-            SELECT id, course_name, department_id, semester_id, year_id, qr_code
+            SELECT
+                id,
+                course_name,
+                qr_code,
+                department,
+                semester,
+                year
             FROM courses
             WHERE course_name ILIKE %s
         """, (f"%{search_name}%",))
     else:
         cursor.execute("""
-            SELECT id, course_name, department_id, semester_id, year_id, qr_code
+            SELECT
+                id,
+                course_name,
+                qr_code,
+                department,
+                semester,
+                year
             FROM courses
         """)
 
@@ -578,18 +590,23 @@ def show_courses():
 
     courses = []
     for row in rows:
-        qr_link = f"/static/qrcodes/{row[5]}" if row[5] else None
+        qr_code = row[2]
+        qr_link = f"/static/qrcodes/{qr_code}" if qr_code else None
         courses.append({
             'id': row[0],
             'course_name': row[1],
-            'department_id': row[2],
-            'semester_id': row[3],
-            'year_id': row[4],
-            'qr_code': row[5],
-            'qr_link': qr_link
+            'qr_code': qr_code,
+            'qr_link': qr_link,
+            'department_name': row[3],
+            'semester_name': row[4],
+            'year_name': row[5]
         })
 
     return render_template('courses.html', courses=courses)
+
+
+
+
 
 
 @app.route("/add_course", methods=["POST"])

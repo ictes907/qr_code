@@ -67,10 +67,10 @@
           <button type="submit">🗑 حذف</button>
         </form>
       </td>
-      <td>{{ course.course_name }}</td>
-      <td>{{ course.department_id }}</td>
-      <td>{{ course.semester_id }}</td>
-      <td>{{ course.year_id }}</td>
+       <td>{{ course.department_name }}</td>
+       <td>{{ course.semester_name }}</td>
+       <td>{{ course.year_name }}</td>
+
       <td>
         {% if course.qr_code %}
           <img src="{{ url_for('static', filename=course.qr_code.split('static/')[1]) }}" width="100" alt="QR Code">
