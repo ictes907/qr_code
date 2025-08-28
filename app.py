@@ -566,9 +566,9 @@ def show_courses():
                 id,
                 course_name,
                 qr_code,
-                department,
-                semester,
-                year
+                department_name,
+                semester_name,
+                year_name
             FROM courses
             WHERE course_name ILIKE %s
         """, (f"%{search_name}%",))
@@ -578,9 +578,9 @@ def show_courses():
                 id,
                 course_name,
                 qr_code,
-                department,
-                semester,
-                year
+                department_name,
+                semester_name,
+                year_name
             FROM courses
         """)
 
@@ -607,37 +607,36 @@ def show_courses():
 
 
 
-
-
 @app.route("/add_course", methods=["POST"])
 def add_course():
-    course_name = request.form["course_name"]
-    department_id = request.form["department_id"]
-    year_id = request.form["year_id"]
-    semester_id = request.form["semester_id"]
+    course_name = request.form.get('course_name')
+    department_name = request.form.get('department_name')
+    year_name = request.form.get('year_name')
+    semester_name = request.form.get('semester_name')
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # إضافة المادة إلى قاعدة البيانات
+    # إدخال المادة بدون QR مؤقتًا
     cursor.execute("""
-        INSERT INTO courses (course_name, department_id, year_id, semester_id)
-        VALUES (%s, %s, %s, %s) RETURNING id
-    """, (course_name, department_id, year_id, semester_id))
+        INSERT INTO courses (course_name, department_name, year_name, semester_name, qr_code)
+        VALUES (%s, %s, %s, %s, %s) RETURNING id
+    """, (course_name, department_name, year_name, semester_name, None))
     course_id = cursor.fetchone()[0]
     conn.commit()
 
-    # توليد رمز QR تلقائي
+    # توليد رمز QR
     qr_url = f"https://qr-code-7jof.onrender.com/confirm_attendance?course_id={course_id}"
     img = qrcode.make(qr_url)
 
     qr_folder = "static/qrcodes"
     os.makedirs(qr_folder, exist_ok=True)
-    qr_path = f"{qr_folder}/course_{course_id}.png"
+    qr_filename = f"course_{course_id}.png"
+    qr_path = os.path.join(qr_folder, qr_filename)
     img.save(qr_path)
 
-    # تحديث مسار الصورة في قاعدة البيانات
-    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_path, course_id))
+    # تحديث مسار QR في قاعدة البيانات
+    cursor.execute("UPDATE courses SET qr_code = %s WHERE id = %s", (qr_filename, course_id))
     conn.commit()
 
     cursor.close()
@@ -647,20 +646,21 @@ def add_course():
 
 
 
+
 @app.route('/edit_course/<int:id>', methods=['POST'])
 def edit_course(id):
     course_name = request.form['course_name']
-    department_id = request.form['department_id']
-    year_id = request.form['year_id']
-    semester_id = request.form['semester_id']
+    department_id = request.form['department_name']
+    year_id = request.form['year_name']
+    semester_id = request.form['semester_name']
 
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE courses
-        SET course_name = %s, department_id = %s, year_id = %s, semester_id = %s
+        SET course_name = %s, department_name = %s, year_name = %s, semester_name = %s
         WHERE id = %s
-    """, (course_name, department_id, year_id, semester_id, id))
+    """, (course_name, department_name, year_name, semester_name, id))
     conn.commit()
     conn.close()
 
@@ -769,27 +769,27 @@ def register_teacher():
 
 
 
+
 # 📌 عرض جدول الفصول
 @app.route('/semesters')
 def show_semesters():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, semester_name, year_id, department_name, start_date, end_date FROM semesters
+        SELECT id, semester_name, year_name, department_name, start_date, end_date
+        FROM semesters
     """)
     rows = cursor.fetchall()
     conn.close()
 
-    semesters = []
-    for row in rows:
-        semesters.append({
-            'id': row[0],
-            'semester_name': row[1],
-            'year_name': row[2],  # لاحقًا نربطها باسم السنة من جدول years
-            'department_name': row[3],
-            'start_date': row[4],
-            'end_date': row[5]
-        })
+    semesters = [{
+        'id': row[0],
+        'semester_name': row[1],
+        'year_name': row[2],
+        'department_name': row[3],
+        'start_date': row[4],
+        'end_date': row[5]
+    } for row in rows]
 
     return render_template('semesters.html', semesters=semesters)
 
@@ -797,19 +797,20 @@ def show_semesters():
 # ➕ إضافة فصل جديد
 @app.route('/add_semester', methods=['POST'])
 def add_semester():
-    semester_name = request.form['semester_name']
-    year_name = request.form['year_id']
-    department_name = request.form['department_name']
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
+    semester_name = request.form.get('semester_name')
+    year_name = request.form.get('year_name')
+    department_name = request.form.get('department_name')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
 
-    conn = sqlite3.connect('your_database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO semesters (semester_name, year_name, department_name, start_date, end_date)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
     """, (semester_name, year_name, department_name, start_date, end_date))
     conn.commit()
+    cursor.close()
     conn.close()
 
     return redirect('/semesters')
@@ -817,10 +818,10 @@ def add_semester():
 # ✏ تعديل فصل
 @app.route('/edit_semester/<int:id>', methods=['POST'])
 def edit_semester(id):
-    start_date = request.form['start_date']
-    end_date = request.form['end_date']
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
 
-    conn = sqlite3.connect('your_database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE semesters SET start_date = ?, end_date = ? WHERE id = ?
@@ -833,7 +834,7 @@ def edit_semester(id):
 # 🗑 حذف فصل
 @app.route('/delete_semester/<int:id>', methods=['GET'])
 def delete_semester(id):
-    conn = sqlite3.connect('your_database.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM semesters WHERE id = ?", (id,))
     conn.commit()
@@ -843,34 +844,42 @@ def delete_semester(id):
 
 
 
+
 @app.route("/attendance")
 def attendance():
-    course_id = request.args.get("course_id")
-    student_id = request.args.get("student_id")
+    course_name = request.args.get("course_name")
+    student_name = request.args.get("student_name")
 
     db = get_db_connection()
     cursor = db.cursor()
 
     query = """
-        SELECT a.id, s.full_name, c.course_name, a.attendance_date, a.status
-        FROM attendance a
-        JOIN students s ON a.student_id = s.id
-        JOIN courses c ON a.course_id = c.id
+        SELECT
+            id,
+            student_name,
+            course_name,
+            department_name,
+            year_name,
+            semester_name,
+            attendance_date,
+            status
+        FROM attendance
     """
+
     filters = []
     params = []
 
-    if course_id:
-        filters.append("a.course_id = %s")
-        params.append(course_id)
-    if student_id:
-        filters.append("a.student_id = %s")
-        params.append(student_id)
+    if course_name:
+        filters.append("course_name = %s")
+        params.append(course_name)
+    if student_name:
+        filters.append("student_name = %s")
+        params.append(student_name)
 
     if filters:
         query += " WHERE " + " AND ".join(filters)
 
-    query += " ORDER BY a.attendance_date DESC"
+    query += " ORDER BY attendance_date DESC"
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
@@ -881,44 +890,61 @@ def attendance():
         'id': row[0],
         'student_name': row[1],
         'course_name': row[2],
-        'date': row[3],
-        'status': row[4]
+        'department_name': row[3],
+        'year_name': row[4],
+        'semester_name': row[5],
+        'date': row[6],
+        'status': row[7]
     } for row in rows]
 
     return render_template("attendance.html", attendance=attendance)
 
 
+
 @app.route("/add_attendance", methods=["POST"])
 def add_attendance():
-    student_id = request.form["student_id"]
-    course_id = request.form["course_id"]
+    student_name = request.form["student_name"]
+    course_name = request.form["course_name"]
+    department_name = request.form["department_name"]
+    year_name = request.form["year_name"]
+    semester_name = request.form["semester_name"]
     date = request.form["date"]
+    time = request.form["time"]
     status = request.form["status"]
 
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute(
-        "INSERT INTO attendance (student_id, course_id, attendance_date, status) VALUES (%s, %s, %s, %s)",
-        (student_id, course_id, date, status))
+    cursor.execute("""
+        INSERT INTO attendance (
+            student_name, course_name, department_name,
+            year_name, semester_name, attendance_date, attendance_time, status
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (student_name, course_name, department_name,
+          year_name, semester_name, date, time, status))
     db.commit()
     cursor.close()
     db.close()
     return redirect("/attendance")
+
 
 @app.route("/edit_attendance/<int:id>", methods=["POST"])
 def edit_attendance(id):
     date = request.form["attendance_date"]
+    time = request.form["attendance_time"]
     status = request.form["status"]
 
     db = get_db_connection()
     cursor = db.cursor()
-    cursor.execute(
-        "UPDATE attendance SET attendance_date = %s, status = %s WHERE id = %s",
-        (date, status, id))
+    cursor.execute("""
+        UPDATE attendance
+        SET attendance_date = %s, attendance_time = %s, status = %s
+        WHERE id = %s
+    """, (date, time, status, id))
     db.commit()
     cursor.close()
     db.close()
     return redirect("/attendance")
+
 
 
 @app.route("/delete_attendance/<int:id>")
@@ -944,36 +970,23 @@ def confirm_attendance():
     cursor = conn.cursor()
 
     today = datetime.now().date()
+
+    # تحقق إذا الحضور مسجل مسبقًا
     cursor.execute("""
         SELECT id FROM attendance
         WHERE student_id = %s AND course_id = %s AND attendance_date = %s
     """, (student_id, course_id, today))
     existing = cursor.fetchone()
-    if existing:
-       # جلب بيانات المادة والطالب حتى لو الحضور مسجل مسبقًا
-       cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
-    course_row = cursor.fetchone()
-    course_name = course_row[0] if course_row else "مادة غير معروفة"
 
-    cursor.execute("SELECT full_name FROM students WHERE id = %s", (student_id,))
-    student_row = cursor.fetchone()
-    student_name = student_row[0] if student_row else "طالب غير معروف"
+    if not existing:
+        # إذا لم يكن مسجل، نسجل الحضور
+        cursor.execute("""
+            INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (student_id, course_id, today, datetime.now().time(), 'حاضر'))
+        conn.commit()
 
-    cursor.close()
-    conn.close()
-
-    return render_template("attendance_success.html",
-                           course_name=course_name,
-                           student_name=student_name,
-                           time=datetime.now().strftime("%Y-%m-%d %H:%M"))
-
-
-    cursor.execute("""
-        INSERT INTO attendance (student_id, course_id, attendance_date, attendance_time, status)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (student_id, course_id, today, datetime.now().time(), 'حاضر'))
-    conn.commit()
-
+    # جلب بيانات المادة والطالب
     cursor.execute("SELECT course_name FROM courses WHERE id = %s", (course_id,))
     course_row = cursor.fetchone()
     course_name = course_row[0] if course_row else "مادة غير معروفة"
@@ -989,8 +1002,6 @@ def confirm_attendance():
                            course_name=course_name,
                            student_name=student_name,
                            time=datetime.now().strftime("%Y-%m-%d %H:%M"))
-
-
 
 
 

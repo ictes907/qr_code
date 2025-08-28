@@ -54,10 +54,16 @@
     </tr>
     {% for entry in attendance %}
     <tr>
-      <td>{{ entry.student_name }}</td>
-      <td>{{ entry.course_name }}</td>
-      <td>{{ entry.date }}</td>
-      <td>{{ entry.status }}</td>
+      <tr>
+       <td>{{ record.student_name }}</td>
+       <td>{{ record.course_name }}</td>
+       <td>{{ record.department_name }}</td>
+       <td>{{ record.year_name }}</td>
+       <td>{{ record.semester_name }}</td>
+       <td>{{ record.date }}</td>
+       <td>{{ record.status }}</td>
+   </tr>
+
       <td>
         <form action="/delete_attendance/{{ entry.id }}" method="get" style="display:inline;">
           <button type="submit">🗑 حذف</button>

@@ -32,11 +32,20 @@
       color: #333;
       margin-bottom: 30px;
     }
+    .export-btn {
+      padding: 8px 16px;
+      background-color: #6c757d;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
 
-  <a href="/export_courses" class="export-btn" title="تصدير إلى Excel" style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">📤</a>
+  <a href="/export_courses" class="export-btn" title="تصدير إلى Excel">📤 تصدير</a>
 
   <form method="get" action="/courses" style="margin-bottom: 20px;">
     <input type="text" name="search_name" placeholder="ابحث باسم المادة">
@@ -58,22 +67,22 @@
       <td>
         <form action="/edit_course/{{ course.id }}" method="post" style="display:inline;">
           <input type="text" name="course_name" value="{{ course.course_name }}" required>
-          <input type="number" name="department_id" value="{{ course.department_id }}" required>
-          <input type="number" name="year_id" value="{{ course.year_id }}" required>
-          <input type="number" name="semester_id" value="{{ course.semester_id }}" required>
+          <input type="text" name="department_name" value="{{ course.department_name }}" required>
+          <input type="text" name="year_name" value="{{ course.year_name }}" required>
+          <input type="text" name="semester_name" value="{{ course.semester_name }}" required>
           <button type="submit">✏ تعديل</button>
         </form>
         <form action="/delete_course/{{ course.id }}" method="get" style="display:inline;">
           <button type="submit">🗑 حذف</button>
         </form>
       </td>
-       <td>{{ course.department_name }}</td>
-       <td>{{ course.semester_name }}</td>
-       <td>{{ course.year_name }}</td>
-
+      <td>{{ course.course_name }}</td>
+      <td>{{ course.department_name }}</td>
+      <td>{{ course.semester_name }}</td>
+      <td>{{ course.year_name }}</td>
       <td>
         {% if course.qr_code %}
-          <img src="{{ url_for('static', filename=course.qr_code.split('static/')[1]) }}" width="100" alt="QR Code">
+          <img src="{{ url_for('static', filename='qrcodes/' ~ course.qr_code) }}" width="100" alt="QR Code">
         {% else %}
           لا يوجد رمز
         {% endif %}
@@ -82,12 +91,12 @@
     {% endfor %}
   </table>
 
-  <h2>➕ إضافة مادة جديدة</h2>
+  <h2 style="margin-top: 40px;">➕ إضافة مادة جديدة</h2>
   <form action="/add_course" method="post">
     <input type="text" name="course_name" placeholder="اسم المادة" required>
-    <input type="number" name="department_id" placeholder="ID القسم" required>
-    <input type="number" name="year_id" placeholder="ID السنة" required>
-    <input type="number" name="semester_id" placeholder="ID الفصل الدراسي" required>
+    <input type="text" name="department_name" placeholder="القسم" required>
+    <input type="text" name="year_name" placeholder="السنة" required>
+    <input type="text" name="semester_name" placeholder="الفصل الدراسي" required>
     <button type="submit">➕ إضافة</button>
   </form>
 
