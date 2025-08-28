@@ -174,38 +174,44 @@ def student_dashboard():
                            departments=departments,
                            semesters=semesters)
 
+
 @app.route("/student_courses", methods=["GET"])
 def student_courses():
     if "student_id" not in session:
         return redirect("/")
 
-    # استلام البيانات من الرابط
-    year_name = request.args.get("year_name", "").strip()
+    # استلام المعرفات من الرابط
+    year_id = request.args.get("year_id", "").strip()
     department_id = request.args.get("department_id", "").strip()
-    semester_name = request.args.get("semester_name", "").strip()
+    semester_id = request.args.get("semester_id", "").strip()
 
-    # التحقق من وجود القيم الثلاثة
-    if not year_name or not department_id or not semester_name:
-        return render_template("student_courses.html", courses=[], error="❌ البيانات المطلوبة غير مكتملة")
+    # التحقق من وجود القيم
+    if not year_id or not department_id or not semester_id:
+        return render_template("student_courses.html", courses=[], error="❌ البيانات غير مكتملة")
 
     # الاتصال بقاعدة البيانات
     db = get_db_connection()
     cursor = db.cursor()
 
-    # جلب اسم القسم من جدول الأقسام
+    # جلب الأسماء من الجداول المرتبطة
+    cursor.execute("SELECT year_name FROM years WHERE id = %s", (year_id,))
+    year_result = cursor.fetchone()
+
     cursor.execute("SELECT department_name FROM departments WHERE id = %s", (department_id,))
-    result = cursor.fetchone()
-    if not result:
+    dept_result = cursor.fetchone()
+
+    cursor.execute("SELECT semester_name FROM semesters WHERE id = %s", (semester_id,))
+    sem_result = cursor.fetchone()
+
+    # التحقق من وجود النتائج
+    if not year_result or not dept_result or not sem_result:
         cursor.close()
         db.close()
-        return render_template("student_courses.html", courses=[], error="❌ القسم غير موجود")
+        return render_template("student_courses.html", courses=[], error="❌ أحد المعرفات غير صالح")
 
-    department_name = result[0]
-
-    # طباعة القيم للتأكد
-    print("📌 السنة:", year_name)
-    print("📌 القسم:", department_name)
-    print("📌 الفصل:", semester_name)
+    year_name = year_result[0]
+    department_name = dept_result[0]
+    semester_name = sem_result[0]
 
     # استعلام المواد المطابقة حسب الأسماء
     cursor.execute("""
@@ -219,11 +225,8 @@ def student_courses():
     cursor.close()
     db.close()
 
-    if not courses:
-        return render_template("student_courses.html", courses=[], error="❌ لا توجد مواد مطابقة للخيارات المحددة")
-
+    # عرض النتائج أو رسالة فارغة
     return render_template("student_courses.html", courses=courses)
-
 
 
 
