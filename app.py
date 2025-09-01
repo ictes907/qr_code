@@ -449,6 +449,42 @@ def delete_student(id):
     return redirect("/students")
 
 
+@app.route("/export_students")
+def export_students():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT 
+            s.full_name,
+            s.university_id,
+            d.department_name,
+            y.year_name
+        FROM students s
+        LEFT JOIN departments d ON s.department_id = d.id
+        LEFT JOIN years y ON s.year_id = y.id
+        ORDER BY s.full_name ASC
+    """)
+
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # تحويل البيانات إلى DataFrame
+    df = pd.DataFrame(rows, columns=["الاسم الكامل", "الرقم الجامعي", "القسم", "السنة الدراسية"])
+
+    # حفظ الملف في الذاكرة
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="الطلاب")
+    output.seek(0)
+
+    return send_file(output,
+                     as_attachment=True,
+                     download_name="قائمة_الطلاب.xlsx",
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
 @app.route("/departments")
 def show_departments():
     conn = get_db_connection()
@@ -743,6 +779,35 @@ def show_teachers():
 
 
 
+@app.route("/export_teachers")
+def export_teachers():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT full_name, university_id, education_level
+        FROM teachers
+        ORDER BY full_name ASC
+    """)
+
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # تحويل البيانات إلى ملف Excel
+    df = pd.DataFrame(rows, columns=["الاسم الكامل", "الرقم الجامعي", "المؤهل العلمي"])
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="المعلمين")
+    output.seek(0)
+
+    return send_file(output,
+                     as_attachment=True,
+                     download_name="قائمة_المعلمين.xlsx",
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
 @app.route("/register", methods=["GET", "POST"])
 def register_teacher():
     if request.method == "POST":
@@ -861,12 +926,19 @@ def delete_semester(id):
 
 @app.route("/attendance")
 def attendance():
-    course_name = request.args.get("course_name")
-    student_name = request.args.get("student_name")
-
+    student_id = request.args.get("student_id")  # الرقم الجامعي
     db = get_db_connection()
     cursor = db.cursor()
 
+    # إذا تم إدخال رقم جامعي، نبحث عن الاسم الكامل أولاً
+    student_name = None
+    if student_id:
+        cursor.execute("SELECT full_name FROM students WHERE university_id = %s", (student_id,))
+        result = cursor.fetchone()
+        if result:
+            student_name = result[0]
+
+    # بناء الاستعلام حسب وجود اسم الطالب
     query = """
         SELECT
             id,
@@ -876,22 +948,14 @@ def attendance():
             year_name,
             semester_name,
             attendance_date,
+            attendance_time,
             status
         FROM attendance
     """
-
-    filters = []
     params = []
-
-    if course_name:
-        filters.append("course_name = %s")
-        params.append(course_name)
     if student_name:
-        filters.append("student_name = %s")
+        query += " WHERE student_name = %s"
         params.append(student_name)
-
-    if filters:
-        query += " WHERE " + " AND ".join(filters)
 
     query += " ORDER BY attendance_date DESC"
 
@@ -908,10 +972,12 @@ def attendance():
         'year_name': row[4],
         'semester_name': row[5],
         'date': row[6],
-        'status': row[7]
+        'time': row[7],
+        'status': row[8]
     } for row in rows]
 
     return render_template("attendance.html", attendance=attendance)
+
 
 
 
@@ -1033,31 +1099,36 @@ def confirm_attendance():
 
 
 
-
-
 @app.route("/export_attendance")
 def export_attendance():
     db = get_db_connection()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT s.full_name, s.university_id, c.course_name, a.attendance_date, a.status
-        FROM attendance a
-        JOIN students s ON a.student_id = s.id
-        JOIN courses c ON a.course_id = c.id
+        SELECT student_name, course_name, department_name, year_name,
+               semester_name, attendance_date, attendance_time, status
+        FROM attendance
+        ORDER BY attendance_date DESC
     """)
     data = cursor.fetchall()
     cursor.close()
     db.close()
 
-    df = pd.DataFrame(data, columns=["الاسم الكامل", "الرقم الجامعي", "المادة", "تاريخ الحضور", "الحالة"])
+    # تحويل البيانات إلى ملف Excel
+    df = pd.DataFrame(data, columns=[
+        "الطالب", "المادة", "القسم", "السنة", "الفصل",
+        "التاريخ", "الوقت", "الحالة"
+    ])
+
     output = BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="Attendance")
+        df.to_excel(writer, index=False, sheet_name="الحضور")
     output.seek(0)
 
-    return send_file(output, as_attachment=True,
-                     download_name="attendance.xlsx",
+    return send_file(output,
+                     as_attachment=True,
+                     download_name="جدول_الحضور.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
 
 
 
