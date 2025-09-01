@@ -21,7 +21,8 @@
       text-align: center;
     }
     th {
-      background-color: #6c757d; /* رمادي متوسط */      color: #fff;
+      background-color: #6c757d;
+      color: #fff;
     }
     tr:nth-child(even) {
       background-color: #f9f9f9;
@@ -42,28 +43,34 @@
 
 <body>
   <h1>جدول الحضور</h1>
-  <a href="/export_courses" class="export-btn" title="تصدير إلى Excel" style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">📤  </a>
+  <a href="/export_courses" class="export-btn" title="تصدير إلى Excel" style="padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">📤</a>
+   <form action="/attendance" method="get" style="text-align:center; margin-bottom: 20px;">
+  <input type="text" name="student_id" placeholder="🔍 الرقم الجامعي" required>
+  <button type="submit">بحث</button>
+ </form>
 
   <table>
     <tr>
       <th>الطالب</th>
       <th>المادة</th>
+      <th>القسم</th>
+      <th>السنة</th>
+      <th>الفصل</th>
       <th>التاريخ</th>
+      <th>الوقت</th>
       <th>الحالة</th>
       <th>إجراءات</th>
     </tr>
     {% for entry in attendance %}
     <tr>
-      <tr>
-       <td>{{ record.student_name }}</td>
-       <td>{{ record.course_name }}</td>
-       <td>{{ record.department_name }}</td>
-       <td>{{ record.year_name }}</td>
-       <td>{{ record.semester_name }}</td>
-       <td>{{ record.date }}</td>
-       <td>{{ record.status }}</td>
-   </tr>
-
+      <td>{{ entry.student_name }}</td>
+      <td>{{ entry.course_name }}</td>
+      <td>{{ entry.department_name }}</td>
+      <td>{{ entry.year_name }}</td>
+      <td>{{ entry.semester_name }}</td>
+      <td>{{ entry.date }}</td>
+      <td>{{ entry.time }}</td>
+      <td>{{ entry.status }}</td>
       <td>
         <form action="/delete_attendance/{{ entry.id }}" method="get" style="display:inline;">
           <button type="submit">🗑 حذف</button>
@@ -79,14 +86,17 @@
       </td>
     </tr>
     {% endfor %}
-    
   </table>
 
   <h2>تسجيل حضور جديد</h2>
   <form action="/add_attendance" method="post">
-    <input type="number" name="student_id" placeholder="ID الطالب" required>
-    <input type="number" name="course_id" placeholder="ID المادة" required>
-    <input type="date" name="date" required>
+    <input type="text" name="student_name" placeholder="اسم الطالب" required>
+    <input type="text" name="course_name" placeholder="اسم المادة" required>
+    <input type="text" name="department_name" placeholder="اسم القسم" required>
+    <input type="text" name="year_name" placeholder="السنة الدراسية" required>
+    <input type="text" name="semester_name" placeholder="الفصل الدراسي" required>
+    <input type="date" name="attendance_date" required>
+    <input type="time" name="attendance_time" required>
     <select name="status" required>
       <option value="حاضر">حاضر</option>
       <option value="غائب">غائب</option>
